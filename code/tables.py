@@ -61,9 +61,9 @@ def create_tables():
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(CREATE_BUS_TABLE)
-        db_cursor.execute(CREATE_PEOPLE_TABLE)
         db_cursor.execute(CREATE_SCHEDULE_TABLE)
         db_cursor.execute(CREATE_TICKET_TABLE)
+        db_cursor.execute(CREATE_PEOPLE_TABLE)
         db_cursor.execute(CREATE_TRAIN_TABLE)
 
         db_connection.commit()
