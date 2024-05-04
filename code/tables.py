@@ -21,4 +21,11 @@ def create_tables():
         )
     """
 
-    CREATE_TRAIN_TABLE
+    CREATE_TRAIN_TABLE = """
+        CREATE TABLE IF NOT EXIST train(
+            ID INT AUTO_INCREMENT PRIMARY KEY,
+            schedule #hur skulle denna fungera?
+        )
+    
+        
+        """
