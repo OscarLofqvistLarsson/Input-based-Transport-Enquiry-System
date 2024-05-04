@@ -73,3 +73,7 @@ def create_tables():
         close_db_connection(db_connection)
     else:
         print("connection to database failed")
+
+
+if __name__ == "__main__":
+    create_tables()
