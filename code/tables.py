@@ -26,5 +26,5 @@ def create_tables():
             ID INT AUTO_INCREMENT PRIMARY KEY,
             schedule #hur skulle denna fungera?
         )
-        """"Bitch"""""
+
         """
