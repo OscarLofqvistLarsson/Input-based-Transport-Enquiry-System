@@ -11,7 +11,7 @@
             "driver": "MySQL",
             "name": "sql11701272",
             "database": "sql11701272",
-            "username": "sql11701272" // Test Kommentar
+            "username": "sql11701272"
         }
     ]
 }
