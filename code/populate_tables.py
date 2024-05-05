@@ -27,13 +27,11 @@ def populate_bus():
 
     print("Bus table has been populated")
 
-
-
 # train
 def populate_train():
 
-    locations = ["Ronneby", "Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby"]
-    IDs = ["t1","t2","t3","t4","t5"]
+    locations = [ "Sölvesborg","Karlshamn","Bräkne-Hoby","Ronneby","Bergåsa", "Karlskrona",]
+    IDs = ["t1","t2","t3","t4","t5","t6"]
 
     db_connection = establish_db_connection()
 
@@ -58,6 +56,12 @@ def populate_train():
 
 
 # schedule
+def populate_schedule():
+    locations = [ "Sölvesborg","Karlshamn","Bräkne-Hoby","Ronneby","Bergåsa", "Karlskrona"]
+    IDs = ["t1","t2","t3","t4","t5","t6"]
+    arrival_time = []
+    departure_time = []
+    endstation = ["Sölvesborg","Karlshamn","Bräkne-Hoby","Ronneby","Bergåsa", "Karlskrona"]
 
 
 
