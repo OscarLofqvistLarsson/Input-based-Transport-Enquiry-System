@@ -3,19 +3,8 @@ from tables import *
 
 # bus
 def populate_bus():
-
-    CREATE_BUS_TRIGGER = """
-            CREATE TRIGGER add_to_id_bus
-            BEFORE INSERT ON bus
-            FOR EACH ROW 
-            BEGIN
-                SET NEW.ID = CONCAT('b', CAST(NEW.ID AS CHAR));
-            END;
-    """
-
-
-
     locations = ["Ronneby","Listerby","Lyckeby","Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby", "Jämjö","Nättraby", "Mörrum"]
+    IDs = ["b1","b2","b3","b4","b5","b6","b7","b8","b9","b10"]
 
     db_connection = establish_db_connection()
 
@@ -24,13 +13,13 @@ def populate_bus():
         db_cursor = db_connection.cursor()
 
         insert_bus = """
-        INSERT INTO bus (location, available)
-        VALUES(%s, %s)
+        INSERT INTO bus (ID, location, available)
+        VALUES(%s, %s, %s)
         """
-        for location in locations:
+        for x in range(len(locations)):
             available = True
 
-            db_cursor.execute(insert_bus, (location, available))
+            db_cursor.execute(insert_bus, (IDs[x], locations[x], available))
 
         db_connection.commit()
 
@@ -40,21 +29,11 @@ def populate_bus():
 
 
 
-
-
 # train
 def populate_train():
 
-    CREATE_BUS_TRIGGER = """
-        CREATE TRIGGER add_to_id_train
-        BEFORE INSERT ON train
-        FOR EACH ROW 
-        BEGIN
-            SET NEW.ID = CONCAT('t', CAST(NEW.ID AS CHAR));
-        END;
-    """
-
     locations = ["Ronneby", "Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby"]
+    IDs = ["t1","t2","t3","t4","t5"]
 
     db_connection = establish_db_connection()
 
@@ -63,13 +42,13 @@ def populate_train():
         db_cursor = db_connection.cursor()
 
         insert_trains = """
-        INSERT INTO train (location, available)
-        VALUES(%s, %s)
+        INSERT INTO train (ID,location, available)
+        VALUES(%s, %s, %s)
         """
-        for location in locations:
+        for x in range(len(locations)):
             available = True
 
-            db_cursor.execute(insert_trains, (location, available))
+            db_cursor.execute(insert_trains, (IDs[x], locations[x], available))
 
         db_connection.commit()
 

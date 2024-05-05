@@ -29,7 +29,7 @@ def create_tables():
     # One specific trainstaion
     CREATE_TRAIN_TABLE = """
         CREATE TABLE IF NOT EXISTS train(
-            ID INT AUTO_INCREMENT PRIMARY KEY,
+            ID VARCHAR(255) PRIMARY KEY,
             location VARCHAR(255) NOT NULL,
             available BOOL NOT NULL
         )
@@ -38,7 +38,7 @@ def create_tables():
     # One specific bus-station
     CREATE_BUS_TABLE = """
         CREATE TABLE IF NOT EXISTS bus(
-            ID INT AUTO_INCREMENT PRIMARY KEY,
+            ID VARCHAR(255) PRIMARY KEY,
             location VARCHAR(255) NOT NULL,
             available BOOL NOT NULL
         )

@@ -4,10 +4,10 @@ def establish_db_connection():
     """Establish connection to DataBase"""
     try:
         db_connection = mysql.connector.connect(
-            host="sql11.freemysqlhosting.net",
-            user="sql11701272",
+            host="localhost",
+            user="user",
             password="EcRkIJpCM5",
-            database="sql11701272"
+            database="project_DV1663"
         )
         return db_connection
 

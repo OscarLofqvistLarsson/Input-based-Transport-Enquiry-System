@@ -6,12 +6,12 @@
                 "enableSsl": "Disabled"
             },
             "previewLimit": 50,
-            "server": "sql11.freemysqlhosting.net",
+            "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "sql11701272",
-            "database": "sql11701272",
-            "username": "sql11701272"
+            "name": "local",
+            "database": "project_DV1663",
+            "username": "user"
         }
     ]
 }
