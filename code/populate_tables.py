@@ -3,6 +3,18 @@ from tables import *
 
 # bus
 def populate_bus():
+
+    CREATE_BUS_TRIGGER = """
+            CREATE TRIGGER add_to_id_bus
+            BEFORE INSERT ON bus
+            FOR EACH ROW 
+            BEGIN
+                SET NEW.ID = CONCAT('b', CAST(NEW.ID AS CHAR));
+            END;
+    """
+
+
+
     locations = ["Ronneby","Listerby","Lyckeby","Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby", "Jämjö","Nättraby", "Mörrum"]
 
     db_connection = establish_db_connection()
@@ -32,6 +44,16 @@ def populate_bus():
 
 # train
 def populate_train():
+
+    CREATE_BUS_TRIGGER = """
+        CREATE TRIGGER add_to_id_train
+        BEFORE INSERT ON train
+        FOR EACH ROW 
+        BEGIN
+            SET NEW.ID = CONCAT('t', CAST(NEW.ID AS CHAR));
+        END;
+    """
+
     locations = ["Ronneby", "Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby"]
 
     db_connection = establish_db_connection()
