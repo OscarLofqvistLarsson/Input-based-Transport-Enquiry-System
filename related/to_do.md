@@ -6,6 +6,8 @@
 4. Check that we are following guidelines for the project
 
 
+order bus and make the population of bus rides use train pop as the template.
+
 
 
 location: kna

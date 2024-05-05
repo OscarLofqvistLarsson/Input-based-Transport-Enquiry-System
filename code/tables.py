@@ -44,8 +44,8 @@ def create_tables():
         )
     """
 
-    # Time table
-    CREATE_SCHEDULE_TABLE = """
+    # Train time table
+    CREATE_TRAIN_SCHEDULE_TABLE = """
         CREATE TABLE IF NOT EXISTS schedule(
             depature_time DATETIME NOT NULL,
             arrival_time DATETIME NOT NULL,
@@ -54,7 +54,16 @@ def create_tables():
             end_station VARCHAR(255) NOT NULL
         )
     """
-
+    # Bus time table
+    CREATE_BUS_SCHEDULE_TABLE = """
+        CREATE TABLE IF NOT EXISTS schedule(
+            depature_time DATETIME NOT NULL,
+            arrival_time DATETIME NOT NULL,
+            total VARCHAR(255) NOT NULL,
+            start_station VARCHAR(255) NOT NULL,
+            end_station VARCHAR(255) NOT NULL
+        )
+    """
     db_connection = establish_db_connection()
 
     if db_connection:
@@ -62,7 +71,8 @@ def create_tables():
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(CREATE_BUS_TABLE)
-        db_cursor.execute(CREATE_SCHEDULE_TABLE)
+        db_cursor.execute(CREATE_TRAIN_SCHEDULE_TABLE)
+        db_cursor.execute(CREATE_BUS_SCHEDULE_TABLE)
         db_cursor.execute(CREATE_TICKET_TABLE)
         db_cursor.execute(CREATE_PEOPLE_TABLE)
         db_cursor.execute(CREATE_TRAIN_TABLE)
