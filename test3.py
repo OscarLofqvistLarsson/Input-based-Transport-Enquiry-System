@@ -1,68 +1,13 @@
-from connection import *
-from tables import *
+import mysql.connector
 from datetime import datetime, timedelta
 
-# bus
-def populate_bus():
-    locations = ["Ronneby","Listerby","Lyckeby","Karlskrona", "Karlshamn", "Sölvesborg", "Bräkne-Hoby", "Jämjö","Nättraby", "Mörrum"]
-    IDs = ["b1","b2","b3","b4","b5","b6","b7","b8","b9","b10"]
-
-    db_connection = establish_db_connection()
-
-    if db_connection:
-
-        db_cursor = db_connection.cursor()
-
-        insert_bus = """
-        INSERT INTO bus (ID, location, available)
-        VALUES(%s, %s, %s)
-        """
-        for x in range(len(locations)):
-            available = True
-
-            db_cursor.execute(insert_bus, (IDs[x], locations[x], available))
-
-        db_connection.commit()
-
-        close_db_connection(db_connection)
-
-    print("Bus table has been populated")
-
-# train
-def populate_train():
-
-    locations = [ "Sölvesborg","Karlshamn","Bräkne-Hoby","Ronneby","Bergåsa", "Karlskrona",]
-    IDs = ["t1","t2","t3","t4","t5","t6"]
-
-    db_connection = establish_db_connection()
-
-    if db_connection:
-
-        db_cursor = db_connection.cursor()
-
-        insert_trains = """
-        INSERT INTO train (ID,location, available)
-        VALUES(%s, %s, %s)
-        """
-        for x in range(len(locations)):
-            available = True
-
-            db_cursor.execute(insert_trains, (IDs[x], locations[x], available))
-
-        db_connection.commit()
-
-        close_db_connection(db_connection)
-
-    print("Train table has been populated")
-
-
-# schedule
+# Function to generate the train schedule
 def populate_schedule():
     locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
     start_time = datetime.strptime("06:00", "%H:%M")
     end_time = datetime.strptime("22:00", "%H:%M")
     delta_time = timedelta(minutes=10)
-    travel_time = timedelta(minutes=10)
+    travel_time = timedelta(minutes=10)  # Assuming each leg of the journey takes 10 minutes
 
     schedule = []
 
@@ -111,27 +56,44 @@ def populate_schedule():
 
             current_time += travel_time
 
-    db_connection = establish_db_connection()
+    return schedule
 
-    if db_connection:
+# Function to populate the schedule into the MySQL database
+def populate_mysql_schedule(schedule):
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="user",
+        password="EcRkIJpCM5",
+        database="project_DV1663"
+    )
+    cursor = conn.cursor()
 
-        db_cursor = db_connection.cursor()
+    create_schedule_table = """
+        CREATE TABLE IF NOT EXISTS schedule(
+            depature_time DATETIME NOT NULL,
+            arrival_time DATETIME NOT NULL,
+            total VARCHAR(255) NOT NULL,
+            start_station VARCHAR(255) NOT NULL,
+            end_station VARCHAR(255) NOT NULL
+        )
+    """
 
-        insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+    cursor.execute(create_schedule_table)
 
-        for entry in schedule:
-            depature_time, arrival_time, total, start_station, end_station = entry
-            values = (depature_time, arrival_time, total, start_station, end_station)
-            db_cursor.execute(insert_query, values)
+    insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
-        db_connection.commit()
+    for entry in schedule:
+        depature_time, arrival_time, total, start_station, end_station = entry
+        values = (depature_time, arrival_time, total, start_station, end_station)
+        cursor.execute(insert_query, values)
 
-        close_db_connection(db_connection)
+    conn.commit()
 
-    print("schedule have been populated")
+    cursor.close()
+    conn.close()
 
+# Generate the train schedule
+schedule = populate_schedule()
 
-if __name__ == "__main__":
-    populate_train()
-    populate_bus()
-    populate_schedule()
+# Populate the schedule into the MySQL database
+populate_mysql_schedule(schedule)

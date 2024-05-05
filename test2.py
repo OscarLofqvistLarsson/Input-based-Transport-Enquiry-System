@@ -31,6 +31,29 @@ def populate_schedule():
 
             current_time += travel_time
 
+    # Adding another train starting from Karlskrona and going in the opposite direction
+    current_time = start_time
+    while current_time < end_time:
+        # Going from Karlskrona to Sölvesborg
+        for i in range(len(locations) - 1, 0, -1):
+            start_station = locations[i]
+            end_station = locations[i - 1]
+
+            schedule.append((current_time.strftime("%H:%M"), (current_time + travel_time).strftime("%H:%M"),
+                             travel_time.total_seconds() // 60, start_station, end_station))
+
+            current_time += travel_time
+
+        # Going back to Karlskrona
+        for i in range(len(locations) - 1):
+            start_station = locations[i]
+            end_station = locations[i + 1]
+
+            schedule.append((current_time.strftime("%H:%M"), (current_time + travel_time).strftime("%H:%M"),
+                             travel_time.total_seconds() // 60, start_station, end_station))
+
+            current_time += travel_time
+
     return schedule
 
 schedule = populate_schedule()

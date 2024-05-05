@@ -50,6 +50,7 @@ def create_tables():
             depature_time DATETIME NOT NULL,
             arrival_time DATETIME NOT NULL,
             total VARCHAR(255) NOT NULL,
+            start_station VARCHAR(255) NOT NULL,
             end_station VARCHAR(255) NOT NULL
         )
     """
