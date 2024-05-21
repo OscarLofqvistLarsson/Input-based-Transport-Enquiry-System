@@ -16,7 +16,6 @@ def create_tables():
     CREATE_PEOPLE_TABLE = """
         CREATE TABLE IF NOT EXISTS people(
             threshold INT NOT NULL,
-            speed INT NOT NULL,
             location VARCHAR(255) NOT NULL,
             destination VARCHAR(255) NOT NULL,
             funds INT NOT NULL,
@@ -26,7 +25,7 @@ def create_tables():
         )
     """
 
-    # One specific trainstaion
+    # One specific train-station
     CREATE_TRAIN_TABLE = """
         CREATE TABLE IF NOT EXISTS train(
             ID VARCHAR(255) PRIMARY KEY,

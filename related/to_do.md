@@ -23,7 +23,7 @@ ge tillbaka den snabbaste vägen, den billigaste, och den som följer preference
 
 
 
-exempel på procedures: kolla alla avaible tåg/bussar
+exempel på procedures: kolla alla available tåg/bussar
 
 function:sum all cost to trip
 
