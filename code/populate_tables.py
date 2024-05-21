@@ -59,8 +59,8 @@ def populate_train():
 # schedule
 def populate_train_schedule():
     locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
-    start_time = datetime.strptime("06:00", "%H:%M")
-    end_time = datetime.strptime("22:00", "%H:%M")
+    start_time = datetime.strptime("06:00:00", "%H:%M:%S")
+    end_time = datetime.strptime("22:00:00", "%H:%M:%S")
     delta_time = timedelta(minutes=10)
     travel_time = timedelta(minutes=10)
 
@@ -73,7 +73,7 @@ def populate_train_schedule():
             start_station = locations[i]
             end_station = locations[i + 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -83,7 +83,7 @@ def populate_train_schedule():
             start_station = locations[i]
             end_station = locations[i - 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -96,7 +96,7 @@ def populate_train_schedule():
             start_station = locations[i]
             end_station = locations[i - 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -106,7 +106,7 @@ def populate_train_schedule():
             start_station = locations[i]
             end_station = locations[i + 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -117,7 +117,7 @@ def populate_train_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO schedule (departure_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             departure_time, arrival_time, total, start_station, end_station = entry
@@ -133,8 +133,8 @@ def populate_train_schedule():
 
 def populate_bus_schedule():
     locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
-    start_time = datetime.strptime("06:00", "%H:%M")
-    end_time = datetime.strptime("22:00", "%H:%M")
+    start_time = datetime.strptime("06:00:00", "%H:%M:%S")
+    end_time = datetime.strptime("22:00:00", "%H:%M:%S")
     delta_time = timedelta(minutes=10)
     travel_time = timedelta(minutes=10)
 
@@ -147,7 +147,7 @@ def populate_bus_schedule():
             start_station = locations[i]
             end_station = locations[i + 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -157,7 +157,7 @@ def populate_bus_schedule():
             start_station = locations[i]
             end_station = locations[i - 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -170,7 +170,7 @@ def populate_bus_schedule():
             start_station = locations[i]
             end_station = locations[i - 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -180,7 +180,7 @@ def populate_bus_schedule():
             start_station = locations[i]
             end_station = locations[i + 1]
 
-            schedule.append((current_time.strftime("%Y-%m-%d %H:%M:%S"), (current_time + travel_time).strftime("%Y-%m-%d %H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
             current_time += travel_time
@@ -191,7 +191,7 @@ def populate_bus_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO schedule (departure_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             depature_time, arrival_time, total, start_station, end_station = entry

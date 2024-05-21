@@ -1,4 +1,3 @@
-import datetime
 from connection import *
 from dropall import *
 from tables import *
@@ -16,17 +15,15 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
         return "Input for preference need to start with t or b for train or bus"
 
 
-    current_time = datetime.datetime.now().time().replace(microsecond=0)
-
-    print(current_time)
+    current_time = datetime.now().time().replace(microsecond=0)
 
     db_connection = establish_db_connection()
 
     if db_connection:
 
         db_cursor = db_connection.cursor()
-        
-        query = ("SELECT start_station WHERE (start_station = %s) AND (departure_time = %s)"(person_location, person_location,))
+
+        query = ("SELECT start_station FROM schedule WHERE (start_station = %s) AND (departure_time = %s)"(person_location, person_location,))
         db_cursor.execute(query)
 
 
