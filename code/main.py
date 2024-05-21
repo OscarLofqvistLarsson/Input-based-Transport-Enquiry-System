@@ -1,5 +1,4 @@
 from connection import *
-from dropall import *
 from tables import *
 from populate_tables import *
 
@@ -15,7 +14,17 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
         return "Input for preference need to start with t or b for train or bus"
 
 
-    current_time = datetime.now().time().replace(microsecond=0)
+    current_datetime = datetime.now().replace(microsecond=0)
+
+    show_depature = current_datetime + timedelta(hours=2)
+    selected_depature = show_depature.time().replace(microsecond=0)
+
+    show_max_travel = current_datetime + timedelta(hours=4)
+    selected_max = show_max_travel.time().replace(microsecond=0)
+
+    elapsed_time = timedelta()
+
+
 
     db_connection = establish_db_connection()
 
@@ -23,8 +32,16 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
 
         db_cursor = db_connection.cursor()
 
-        query = ("SELECT start_station FROM schedule WHERE (start_station = %s) AND (departure_time = %s)"(person_location, person_location,))
-        db_cursor.execute(query)
+        query_schedule = """
+        SELECT *
+        FROM schedule
+        WHERE depature_time = %s AND arrival_time = %s AND total = %s AND start_station = %s AND end_station = %s
+        """
+        data_query_search = (selected_depature, selected_max, elapsed_time, person_location, person_destination )
+        db_cursor.execute(query_schedule, data_query_search)
+        query_result = db_cursor.fetchall()
+
+        print(query_result)
 
 
 
