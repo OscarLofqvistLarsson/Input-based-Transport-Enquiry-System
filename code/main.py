@@ -32,12 +32,12 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
         # """
 
         query_schedule = """
-        SELECT *
-        FROM train_schedule
-        WHERE
-        start_station = %s
+        SELECT t1.start_station , t2.end_station, t1.total as total
+        FROM train_schedule t1
+        INNER JOIN train_schedule t2 ON t1.total = t2.total;
+
         """
-        data_query_search = (person_location, )
+        data_query_search = (person_location, person_destination, )
         db_cursor.execute(query_schedule, data_query_search)
         query_result = db_cursor.fetchall()
 
