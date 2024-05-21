@@ -1,71 +1,93 @@
 from connection import *
 from tables import *
 from populate_tables import *
+from datetime import datetime, timedelta
 
-def estimated_ticket(person_location,person_destination,threshold,funds):
-
+def estimated_ticket(person_location, person_destination, threshold, funds):
     if threshold[0] == "t" or threshold[0] == "b":
         acceptable_wait = int(threshold[1:]) * 5
-
     else:
-        return "Input for preference need to start with t or b for train or bus"
-
+        return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
 
-    selected_depature = current_datetime + timedelta(hours=2)
+    def get_schedule(transport_type):
+        if transport_type == 'train':
+            query_schedule = """
+            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            FROM train_schedule
+            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
+            ORDER BY depature_time
+            LIMIT 1
+            """
+        else:
+            query_schedule = """
+            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            FROM bus_schedule
+            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
+            ORDER BY depature_time
+            LIMIT 1
+            """
+        return query_schedule
 
-    elapsed_time = timedelta()
 
     db_connection = establish_db_connection()
-
     if db_connection:
-
         db_cursor = db_connection.cursor()
+        
+        transport_type = 'train' if threshold[0] == 't' else 'bus'
+        query_schedule = get_schedule(transport_type)
+        db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
+        query_result = db_cursor.fetchone()
+        
+        if query_result:
+            depature_time_str, arrival_time, start_station, end_station, total = query_result
+            print("Departure time:", depature_time_str, type(depature_time_str))  # Debug statement
+            if isinstance(depature_time_str, timedelta):
+                return "Error: Departure time är feeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeel"
+            depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
+            wait_time = (depature_time - current_datetime).total_seconds() / 60
 
-        # query_schedule = """
-        # SELECT *
-        # FROM train_schedule
-        # WHERE depature_time BETWEEN %s and %s
-        # AND start_station = %s
-        # AND end_station = %s
-        # """
+            if wait_time > acceptable_wait and transport_type == 'train':
+                transport_type = 'bus'
+                query_schedule = get_schedule(transport_type)
+                db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
+                query_result = db_cursor.fetchone()
+                
+                if query_result:
+                    depature_time_str, arrival_time, start_station, end_station, total = query_result
+                    print("Departure time (bus):", depature_time_str, type(depature_time_str))  # Debug statement
+                    if isinstance(depature_time_str, timedelta):
+                        return "Error: Departure time är feeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeel."
+                    depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
+                    wait_time = (depature_time - current_datetime).total_seconds() / 60
+                else:
+                    return "No available buses or trains match your criteria."
+            
+            if query_result:
+                ticket_price = 100  # ÄNDRA OM DET INTE ÄR BRA NOG ELLER OM DET BARA ÄR SOSSAR SOM ÅKER, DÅ SKA EN BILJETT KOSTA 1000000000000000000000000:-
+                if funds >= ticket_price:
+                    result = f"Next {transport_type} from {start_station} to {end_station} departs at {depature_time.strftime('%H:%M:%S')}."
+                    result += f"\nArrival time: {arrival_time}"
+                    result += f"\nTotal travel time: {total}"
+                    result += f"\nTicket price: {ticket_price}"
+                    return result
+                else:
+                    return "Insufficient funds for the ticket."
+        else:
+            return "No available buses or trains match your criteria."
 
-        query_schedule = """
-        SELECT t1.start_station , t2.end_station, t1.total as total
-        FROM train_schedule t1
-        INNER JOIN train_schedule t2 ON t1.total = t2.total;
-
-        """
-        data_query_search = (person_location, person_destination, )
-        db_cursor.execute(query_schedule, data_query_search)
-        query_result = db_cursor.fetchall()
-
-        # data_query_search = (current_datetime, selected_depature, person_location, person_destination )
-        # db_cursor.execute(query_schedule, data_query_search)
-        # query_result = db_cursor.fetchall()
-
-        print(query_result)
+        db_cursor.close()
+        close_db_connection(db_connection)
+    else:
+        return "Connection to database failed"
 
 
-
-
-
-
-
-
-
-
-
-
-if __name__== "__main__":
-
+if __name__ == "__main__":
     person_location = input("At what station are you at the moment?\n")
-
-    person_destination = input("Where are you planing on heading today?\n")
-
+    person_destination = input("Where are you planning on heading today?\n")
     threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
+    funds = int(input("How much money do you have for your traveling needs?\n"))
 
-    funds = input("How much money do you have for you're traveling needs\n")
-
-    estimated_ticket(person_location, person_destination, threshold, funds)
+    result = estimated_ticket(person_location, person_destination, threshold, funds)
+    print(result)
