@@ -4,10 +4,7 @@ from populate_tables import *
 
 def estimated_ticket(person_location,person_destination,threshold,funds):
 
-    if threshold[0] == "t":
-        acceptable_wait = int(threshold[1:]) * 5
-
-    elif threshold[0] == "b":
+    if threshold[0] == "t" or threshold[0] == "b":
         acceptable_wait = int(threshold[1:]) * 5
 
     else:
@@ -16,15 +13,9 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
 
     current_datetime = datetime.now().replace(microsecond=0)
 
-    show_depature = current_datetime + timedelta(hours=2)
-    selected_depature = show_depature.time().replace(microsecond=0)
-
-    show_max_travel = current_datetime + timedelta(hours=4)
-    selected_max = show_max_travel.time().replace(microsecond=0)
+    selected_depature = current_datetime + timedelta(hours=2)
 
     elapsed_time = timedelta()
-
-
 
     db_connection = establish_db_connection()
 
@@ -32,14 +23,27 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
 
         db_cursor = db_connection.cursor()
 
+        # query_schedule = """
+        # SELECT *
+        # FROM train_schedule
+        # WHERE depature_time BETWEEN %s and %s
+        # AND start_station = %s
+        # AND end_station = %s
+        # """
+
         query_schedule = """
         SELECT *
-        FROM schedule
-        WHERE depature_time = %s AND arrival_time = %s AND total = %s AND start_station = %s AND end_station = %s
+        FROM train_schedule
+        WHERE
+        start_station = %s
         """
-        data_query_search = (selected_depature, selected_max, elapsed_time, person_location, person_destination )
+        data_query_search = (person_location, )
         db_cursor.execute(query_schedule, data_query_search)
         query_result = db_cursor.fetchall()
+
+        # data_query_search = (current_datetime, selected_depature, person_location, person_destination )
+        # db_cursor.execute(query_schedule, data_query_search)
+        # query_result = db_cursor.fetchall()
 
         print(query_result)
 

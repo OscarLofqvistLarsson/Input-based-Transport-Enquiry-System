@@ -117,7 +117,7 @@ def populate_train_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO train_schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             departure_time, arrival_time, total, start_station, end_station = entry
@@ -132,17 +132,17 @@ def populate_train_schedule():
 
 
 def populate_bus_schedule():
-    locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
+    locations = ["Sölvesborg",  "Mörrum", "Karlshamn", "Bräkne-Hoby", "Ronneby","Listerby","Nättraby", "Karlskrona",  "Lyckeby", "Jämjö", ]
     start_time = datetime.strptime("06:00:00", "%H:%M:%S")
     end_time = datetime.strptime("22:00:00", "%H:%M:%S")
-    delta_time = timedelta(minutes=10)
-    travel_time = timedelta(minutes=10)
+    delta_time = timedelta(minutes=12)
+    travel_time = timedelta(minutes=12)
 
     schedule = []
 
     current_time = start_time
     while current_time < end_time:
-        # Going from Sölvesborg to Karlskrona
+        # Going from Sölvesborg to jämjö
         for i in range(len(locations) - 1):
             start_station = locations[i]
             end_station = locations[i + 1]
@@ -162,10 +162,10 @@ def populate_bus_schedule():
 
             current_time += travel_time
 
-    # Adding another train starting from Karlskrona and going in the opposite direction
+    # Adding another bus starting from jämjö and going in the opposite direction
     current_time = start_time
     while current_time < end_time:
-        # Going from Karlskrona to Sölvesborg
+        # Going from jämjö to Sölvesborg
         for i in range(len(locations) - 1, 0, -1):
             start_station = locations[i]
             end_station = locations[i - 1]
@@ -191,7 +191,7 @@ def populate_bus_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO bus_schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             depature_time, arrival_time, total, start_station, end_station = entry
@@ -202,10 +202,11 @@ def populate_bus_schedule():
 
         close_db_connection(db_connection)
 
-    print("Train schedule have been populated")
+    print("Bus schedule have been populated")
 
 
 if __name__ == "__main__":
     populate_train()
     populate_bus()
     populate_train_schedule()
+    populate_bus_schedule()
