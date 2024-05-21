@@ -1,4 +1,8 @@
-import connection, dropall, tables, populate_tables, datetime
+import datetime
+from connection import *
+from dropall import *
+from tables import *
+from populate_tables import *
 
 def estimated_ticket(person_location,person_destination,threshold,funds):
 
@@ -14,16 +18,21 @@ def estimated_ticket(person_location,person_destination,threshold,funds):
 
     current_time = datetime.datetime.now().time().replace(microsecond=0)
 
+    print(current_time)
+
+    db_connection = establish_db_connection()
+
+    if db_connection:
+
+        db_cursor = db_connection.cursor()
+        
+        query = ("SELECT start_station WHERE (start_station = %s) AND (departure_time = %s)"(person_location, person_location,))
+        db_cursor.execute(query)
 
 
 
 
 
-
-
-
-
-    return total
 
 
 
@@ -41,3 +50,4 @@ if __name__== "__main__":
 
     funds = input("How much money do you have for you're traveling needs\n")
 
+    estimated_ticket(person_location, person_destination, threshold, funds)
