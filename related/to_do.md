@@ -30,3 +30,5 @@ function:sum all cost to trip
 trigger:age or pengar
 
 join:kolla mellan resor med schedule
+
+
