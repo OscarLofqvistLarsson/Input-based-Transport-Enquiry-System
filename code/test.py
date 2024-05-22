@@ -62,8 +62,6 @@ def schedule_pdf():
     else:
         print("Connection to database failed.")
 
-
-
 def estimated_ticket(person_location, person_destination, threshold, funds):
     if threshold[0] == "t" or threshold[0] == "b":
         acceptable_wait = int(threshold[1:]) * 5
@@ -129,10 +127,14 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 if not find_station:
                     return "No bus or train match the criteria"
 
-            depature_time_str, arrival_time_delta, start_station, end_station, total = find_station
+            depature_time_str, arrival_time_str, start_station, end_station, total = find_station
+            print(find_station)
             depature_time = datetime.strptime(depature_time_str, "%H:%M:%S").time()
+            arrival_time = current_datetime + arrival_time_str
             current_datetime = datetime.combine(current_datetime.date(), depature_time)
-            arrival_time_dt = current_datetime + arrival_time_delta
+            arrival_time_dt = datetime.combine(current_datetime.date(), arrival_time)
+            if arrival_time < depature_time:
+                arrival_time_dt += timedelta(days=1)
             segment_travel_time = arrival_time_dt - current_datetime
             total_travel_time += segment_travel_time
             travel_map.append((depature_time_str, arrival_time_dt.time(), start_station, end_station, total))
