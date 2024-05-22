@@ -8,6 +8,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 
+# List of stations in order
+locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
 
 def schedule_pdf():
     transport_type = input("Would you like to see the train or bus schedule?\n").strip().lower()
@@ -35,9 +37,6 @@ def schedule_pdf():
             print("No schedule data available.")
             exit()
 
-        #for row in schedule_data:
-         #   print(row)
-
         pdf_filename = f"{transport_type}_schedule.pdf"
         c = canvas.Canvas(pdf_filename, pagesize=letter)
         width, height = letter
@@ -63,8 +62,6 @@ def schedule_pdf():
     else:
         print("Connection to database failed.")
 
-
-
 def estimated_ticket(person_location, person_destination, threshold, funds):
     if threshold[0] == "t" or threshold[0] == "b":
         acceptable_wait = int(threshold[1:]) * 5
@@ -72,101 +69,111 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
-    def get_schedule(transport_type):
+
+    def get_schedule(transport_type, start_station, end_station, travel_time):
         if transport_type == 'train':
             query_schedule = """
-            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
             FROM train_schedule
-            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
-            ORDER BY depature_time
+            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
+            ORDER BY departure_time
             LIMIT 1
             """
         else:
             query_schedule = """
-            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
             FROM bus_schedule
-            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
-            ORDER BY depature_time
+            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
+            ORDER BY departure_time
             LIMIT 1
             """
         return query_schedule
 
+    def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
+        query_schedule = """
+        SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
+        FROM {}_schedule
+        WHERE start_station = %s AND departure_time >= %s
+        ORDER BY departure_time
+        LIMIT 1
+        """.format(transport_type)
+
+        db_cursor.execute(query_schedule, (current_station, travel_time))
+        for station in db_cursor.fetchall():
+            _, _, _, end_station, _ = station
+            if end_station not in visited_stations:
+                return station
+        return None
 
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
-
+        total_travel_time = timedelta()
+        current_station = person_location
+        travel_map = []
+        visited_stations = set()
         transport_type = 'train' if threshold[0] == 't' else 'bus'
-        query_schedule = get_schedule(transport_type)
-        db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
-        query_result = db_cursor.fetchone()
 
+        while current_station != person_destination:
+            visited_stations.add(current_station)
+            find_station = find_next_station(db_cursor, transport_type, current_station, current_datetime, visited_stations)
+            if not find_station:
+                return "No bus or train match the criteria, check that your spelling is correct."
 
-        if query_result:
-            depature_time_str, arrival_time, start_station, end_station, total = query_result
+            departure_time_str, arrival_time_str, start_station, end_station, total = find_station
 
-            depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
+            # Ensure these are strings
+            if not isinstance(departure_time_str, str) or not isinstance(arrival_time_str, str):
+                return "Error: departure_time_str or arrival_time_str is not a string"
 
-            current_datetime = current_datetime.strftime('%H:%M:%S')
-            depature_time = depature_time.strftime('%H:%M:%S')
-            current_datetime = datetime.strptime(current_datetime,'%H:%M:%S')
-            depature_time = datetime.strptime(depature_time,'%H:%M:%S')
+            departure_time = datetime.strptime(departure_time_str, "%H:%M:%S").time()
+            arrival_time = datetime.strptime(arrival_time_str, "%H:%M:%S").time()
 
+            departure_datetime = datetime.combine(current_datetime.date(), departure_time)
+            arrival_datetime = datetime.combine(current_datetime.date(), arrival_time)
 
+            if arrival_datetime < departure_datetime:
+                arrival_datetime += timedelta(days=1)
 
-            wait_time = depature_time - current_datetime
-            wait_time = int(wait_time.total_seconds() / 60) # Minuter
+            segment_travel_time = arrival_datetime - departure_datetime
+            total_travel_time += segment_travel_time
+            travel_map.append((departure_time_str, arrival_time_str, start_station, end_station, total))
 
+            current_datetime = arrival_datetime
 
-            if wait_time > acceptable_wait and transport_type == 'train': # Acceptable_wait är i min
-                transport_type = 'bus'
-                query_schedule = get_schedule(transport_type)
-                db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
-                query_result = db_cursor.fetchone()
+            # Check if the direction is correct
+            current_index = locations.index(current_station)
+            next_index = locations.index(end_station)
+            final_index = locations.index(person_destination)
+            if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
+                current_station = end_station
+            else:
+                # If the immediate next station is not in the direction, continue to look for other options.
+                alternative_station_found = False
+                for station in locations[current_index + 1:]:
+                    if station not in visited_stations:
+                        find_station = find_next_station(db_cursor, transport_type, current_station, current_datetime, visited_stations)
+                        if find_station:
+                            current_station = end_station
+                            alternative_station_found = True
+                            break
+                if not alternative_station_found:
+                    return "No direct route towards the destination found."
 
-                if query_result:
-                    depature_time_str, arrival_time, start_station, end_station, total = query_result
-                    print("Departure time (bus):", depature_time_str)
-
-                    depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
-                    wait_time = (depature_time - current_datetime).total_seconds() / 60
-                else:
-                    return "No available buses or trains match your criteria."
-                
-            if wait_time > acceptable_wait and transport_type == 'bus': # Acceptable_wait är i min
-                transport_type = 'train'
-                query_schedule = get_schedule(transport_type)
-                db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
-                query_result = db_cursor.fetchone()
-
-                if query_result:
-                    depature_time_str, arrival_time, start_station, end_station, total = query_result
-                    print("Departure time (train):", depature_time_str)
-
-                    depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
-                    wait_time = (depature_time - current_datetime).total_seconds() / 60
-                else:
-                    return "No available buses or trains match your criteria."
-
-
-
-            if query_result:
-                ticket_price = 100  # ÄNDRA OM DET INTE ÄR BRA NOG ELLER OM DET BARA ÄR SOSSAR SOM ÅKER, DÅ SKA EN BILJETT KOSTA 1000000000000000000000000:-
-                if funds >= ticket_price:
-                    result = f"Next {transport_type} from {start_station} to {end_station} departs at {depature_time.strftime('%H:%M:%S')}."
-                    result += f"\nArrival time: {arrival_time}"
-                    result += f"\nTotal travel time: {total}"
-                    result += f"\nTicket price: {ticket_price}"
-                    return result
-                else:
-                    return "Insufficient funds for the ticket."
+        total_minutes = total_travel_time.total_seconds() / 60
+        ticket_price = 100
+        if funds >= ticket_price:
+            result = "Travel itinerary:\n"
+            for departure_time_str, arrival_time_str, start_station, end_station, total in travel_map:
+                result += f"From {start_station} to {end_station}, departure at {departure_time_str}, arrival at {arrival_time_str}\n"
+            result += f"Total travel time: {total_minutes} minutes\n"
+            result += f"Ticket price: {ticket_price}\n"
+            return result
         else:
-            return "No available buses or trains match your criteria."
-
-        db_cursor.close()
-        close_db_connection(db_connection)
+            return "Insufficient funds for the ticket."
     else:
         return "Connection to database failed"
+
 
 
 if __name__ == "__main__":
@@ -178,14 +185,14 @@ if __name__ == "__main__":
         threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
         funds = int(input("How much money do you have for your traveling needs?\n"))
 
-        result = estimated_ticket(person_location, person_destination, threshold, funds) #Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
+        result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
         print(result)
     elif choice == "schedule":
 
         try:
             os.remove("train_schedule.pdf")
             os.remove("bus_schedule.pdf")
-        except: 
+        except:
             FileNotFoundError
 
         schedule_pdf()
