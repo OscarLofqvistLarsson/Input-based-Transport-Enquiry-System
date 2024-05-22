@@ -72,7 +72,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
-
     def get_schedule(transport_type):
         if transport_type == 'train':
             query_schedule = """
@@ -102,13 +101,28 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
         query_result = db_cursor.fetchone()
         
+        
         if query_result:
             depature_time_str, arrival_time, start_station, end_station, total = query_result
-            print("Departure time:", depature_time_str, type(depature_time_str))  # Debug statement
-            if isinstance(depature_time_str, timedelta):
-                return "Error: Departure time är feeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeel"
+
             depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
-            wait_time = (depature_time - current_datetime).total_seconds() / 60
+
+            current_datetime = current_datetime.strftime('%H:%M:%S')
+            depature_time = depature_time.strftime('%H:%M:%S')
+            current_datetime = datetime.strptime(current_datetime,'%H:%M:%S')
+            depature_time = datetime.strptime(depature_time,'%H:%M:%S')
+
+            print(current_datetime, depature_time)
+
+
+            wait_time = depature_time - current_datetime
+            print(wait_time)
+
+
+      
+
+
+
 
             if wait_time > acceptable_wait and transport_type == 'train':
                 transport_type = 'bus'
@@ -118,9 +132,8 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 
                 if query_result:
                     depature_time_str, arrival_time, start_station, end_station, total = query_result
-                    print("Departure time (bus):", depature_time_str, type(depature_time_str))  # Debug statement
-                    if isinstance(depature_time_str, timedelta):
-                        return "Error: Departure time är feeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeel."
+                    print("Departure time (bus):", depature_time_str)
+  
                     depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
                     wait_time = (depature_time - current_datetime).total_seconds() / 60
                 else:
