@@ -61,7 +61,6 @@ def populate_train_schedule():
     locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
     start_time = datetime.strptime("06:00:00", "%H:%M:%S")
     end_time = datetime.strptime("22:00:00", "%H:%M:%S")
-    delta_time = timedelta(minutes=10)
     travel_time = timedelta(minutes=10)
 
     schedule = []
@@ -72,21 +71,23 @@ def populate_train_schedule():
         for i in range(len(locations) - 1):
             start_station = locations[i]
             end_station = locations[i + 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
 
         # Going back to Sölvesborg
         for i in range(len(locations) - 1, 0, -1):
             start_station = locations[i]
             end_station = locations[i - 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
 
     # Adding another train starting from Karlskrona and going in the opposite direction
     current_time = start_time
@@ -95,21 +96,24 @@ def populate_train_schedule():
         for i in range(len(locations) - 1, 0, -1):
             start_station = locations[i]
             end_station = locations[i - 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"), 
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
+
 
         # Going back to Karlskrona
         for i in range(len(locations) - 1):
             start_station = locations[i]
             end_station = locations[i + 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"), 
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
 
     db_connection = establish_db_connection()
 
@@ -146,21 +150,23 @@ def populate_bus_schedule():
         for i in range(len(locations) - 1):
             start_station = locations[i]
             end_station = locations[i + 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
 
         # Going back to Sölvesborg
         for i in range(len(locations) - 1, 0, -1):
             start_station = locations[i]
             end_station = locations[i - 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
 
     # Adding another bus starting from jämjö and going in the opposite direction
     current_time = start_time
@@ -169,21 +175,23 @@ def populate_bus_schedule():
         for i in range(len(locations) - 1, 0, -1):
             start_station = locations[i]
             end_station = locations[i - 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
-
+            current_time = arrival_time
         # Going back to Karlskrona
         for i in range(len(locations) - 1):
             start_station = locations[i]
             end_station = locations[i + 1]
+            arrival_time = current_time + travel_time
 
-            schedule.append((current_time.strftime("%H:%M:%S"), (current_time + travel_time).strftime("%H:%M:%S"),
+            schedule.append((current_time.strftime("%H:%M:%S"), arrival_time.strftime("%H:%M:%S"),
                             str(travel_time), start_station, end_station))
 
-            current_time += travel_time
+            current_time = arrival_time
+
 
     db_connection = establish_db_connection()
 
