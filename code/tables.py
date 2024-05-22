@@ -46,7 +46,7 @@ def create_tables():
     # Train time table
     CREATE_TRAIN_SCHEDULE_TABLE = """
         CREATE TABLE IF NOT EXISTS train_schedule(
-            depature_time TIME NOT NULL,
+            departure_time TIME NOT NULL,
             arrival_time TIME NOT NULL,
             total VARCHAR(255) NOT NULL,
             start_station VARCHAR(255) NOT NULL,
@@ -56,7 +56,7 @@ def create_tables():
     # Bus time table
     CREATE_BUS_SCHEDULE_TABLE = """
         CREATE TABLE IF NOT EXISTS bus_schedule(
-            depature_time TIME NOT NULL,
+            departure_time TIME NOT NULL,
             arrival_time TIME NOT NULL,
             total VARCHAR(255) NOT NULL,
             start_station VARCHAR(255) NOT NULL,

@@ -73,28 +73,28 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     def get_schedule(transport_type, start_station, end_station, travel_time):
         if transport_type == 'train':
             query_schedule = """
-            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
             FROM train_schedule
-            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
-            ORDER BY depature_time
+            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
+            ORDER BY departure_time
             LIMIT 1
             """
         else:
             query_schedule = """
-            SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
             FROM bus_schedule
-            WHERE start_station = %s AND end_station = %s AND depature_time >= %s
-            ORDER BY depature_time
+            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
+            ORDER BY departure_time
             LIMIT 1
             """
         return query_schedule
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
-        SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+        SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
         FROM {}_schedule
-        WHERE start_station = %s AND depature_time >= %s
-        ORDER BY depature_time
+        WHERE start_station = %s AND departure_time >= %s
+        ORDER BY departure_time
         LIMIT 1
         """.format(transport_type)
 
@@ -116,20 +116,28 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
         while current_station != person_destination:
             visited_stations.add(current_station)
-            find_station = find_next_station(db_cursor, transport_type,current_station, current_datetime, visited_stations)
+            find_station = find_next_station(db_cursor, transport_type, current_station, current_datetime, visited_stations)
             if not find_station:
                 return "No bus or train match the criteria"
 
-            depature_time_str, arrival_time_delta, start_station, end_station, total = find_station
-            print(find_station)
-            depature_time = datetime.strptime(depature_time_str, "%H:%M:%S").time()
+            departure_time_str, arrival_time_str, start_station, end_station, total = find_station
 
-            depature_datetime = datetime.combine(current_datetime.date(), depature_time)
-            arrival_datetime = depature_datetime + arrival_time_delta
+            # Ensure these are strings
+            if not isinstance(departure_time_str, str) or not isinstance(arrival_time_str, str):
+                return "Error: departure_time_str or arrival_time_str is not a string"
 
-            segment_travel_time = arrival_datetime - depature_datetime
+            departure_time = datetime.strptime(departure_time_str, "%H:%M:%S").time()
+            arrival_time = datetime.strptime(arrival_time_str, "%H:%M:%S").time()
+
+            departure_datetime = datetime.combine(current_datetime.date(), departure_time)
+            arrival_datetime = datetime.combine(current_datetime.date(), arrival_time)
+
+            if arrival_datetime < departure_datetime:
+                arrival_datetime += timedelta(days=1)
+
+            segment_travel_time = arrival_datetime - departure_datetime
             total_travel_time += segment_travel_time
-            travel_map.append((depature_time_str, arrival_datetime.time(), start_station, end_station, total))
+            travel_map.append((departure_time_str, arrival_time_str, start_station, end_station, total))
 
             current_datetime = arrival_datetime
 
@@ -156,8 +164,8 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         ticket_price = 100
         if funds >= ticket_price:
             result = "Travel itinerary:\n"
-            for depature_time_str, arrival_time, start_station, end_station, total in travel_map:
-                result += f"From {start_station} to {end_station}, departure at {depature_time_str}, arrival at {arrival_time}\n"
+            for departure_time_str, arrival_time_str, start_station, end_station, total in travel_map:
+                result += f"From {start_station} to {end_station}, departure at {departure_time_str}, arrival at {arrival_time_str}\n"
             result += f"Total travel time: {total_minutes} minutes\n"
             result += f"Ticket price: {ticket_price}\n"
             return result
@@ -165,6 +173,8 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             return "Insufficient funds for the ticket."
     else:
         return "Connection to database failed"
+
+
 
 if __name__ == "__main__":
 
@@ -175,7 +185,7 @@ if __name__ == "__main__":
         threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
         funds = int(input("How much money do you have for your traveling needs?\n"))
 
-        result = estimated_ticket(person_location, person_destination, threshold, funds) #Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
+        result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
         print(result)
     elif choice == "schedule":
 

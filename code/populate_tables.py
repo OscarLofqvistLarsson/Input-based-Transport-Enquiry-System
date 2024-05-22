@@ -121,7 +121,7 @@ def populate_train_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO train_schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO train_schedule (departure_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             departure_time, arrival_time, total, start_station, end_station = entry
@@ -199,7 +199,7 @@ def populate_bus_schedule():
 
         db_cursor = db_connection.cursor()
 
-        insert_query = "INSERT INTO bus_schedule (depature_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
+        insert_query = "INSERT INTO bus_schedule (departure_time, arrival_time, total, start_station, end_station) VALUES (%s, %s, %s, %s, %s)"
 
         for entry in schedule:
             depature_time, arrival_time, total, start_station, end_station = entry
