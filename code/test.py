@@ -89,10 +89,17 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             """
         return query_schedule
 
-    def find_next_station(db_cursor, transport_type, current_station, final_station,travel_time, visited_stations):
-        query_schedule = get_schedule(transport_type, current_station, final_station, travel_time)
-        db_cursor.execute(query_schedule, (current_station, final_station, travel_time))
-        for station in  db_cursor.fetchall():
+    def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
+        query_schedule = """
+        SELECT CAST(depature_time AS CHAR) AS depature_time, arrival_time, start_station, end_station, total
+        FROM {}_schedule
+        WHERE start_station = %s AND depature_time >= %s
+        ORDER BY depature_time
+        LIMIT 1
+        """.format(transport_type)
+
+        db_cursor.execute(query_schedule, (current_station, travel_time))
+        for station in db_cursor.fetchall():
             _, _, _, end_station, _ = station
             if end_station not in visited_stations:
                 return station
@@ -109,35 +116,22 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
         while current_station != person_destination:
             visited_stations.add(current_station)
-            find_station = find_next_station(db_cursor, transport_type,current_station,current_station, current_datetime, visited_stations)
+            find_station = find_next_station(db_cursor, transport_type,current_station, current_datetime, visited_stations)
             if not find_station:
-                next_station_query = """
-                    SELECT end_station
-                    FROM train_schedule
-                    WHERE start_station = %s AND depature_time >= %s
-                    ORDER BY depature_time
-                    LIMIT 1
-                """
-                db_cursor.execute(next_station_query, (current_station, current_datetime))
-                next_station_result = db_cursor.fetchone()
-                if not next_station_result:
-                    return "No bus or train match the criteria"
-                next_station = next_station_result[0]
-                find_station = find_next_station(db_cursor, transport_type,current_station,next_station,current_datetime, visited_stations)
-                if not find_station:
-                    return "No bus or train match the criteria"
+                return "No bus or train match the criteria"
 
-            depature_time_str, arrival_time_str, start_station, end_station, total = find_station
+            depature_time_str, arrival_time_delta, start_station, end_station, total = find_station
             print(find_station)
             depature_time = datetime.strptime(depature_time_str, "%H:%M:%S").time()
-            arrival_time = current_datetime + arrival_time_str
-            current_datetime = datetime.combine(current_datetime.date(), depature_time)
-            arrival_time_dt = datetime.combine(current_datetime.date(), arrival_time)
-            if arrival_time < depature_time:
-                arrival_time_dt += timedelta(days=1)
-            segment_travel_time = arrival_time_dt - current_datetime
+
+            depature_datetime = datetime.combine(current_datetime.date(), depature_time)
+            arrival_datetime = depature_datetime + arrival_time_delta
+
+            segment_travel_time = arrival_datetime - depature_datetime
             total_travel_time += segment_travel_time
-            travel_map.append((depature_time_str, arrival_time_dt.time(), start_station, end_station, total))
+            travel_map.append((depature_time_str, arrival_datetime.time(), start_station, end_station, total))
+
+            current_datetime = arrival_datetime
 
             # Check if the direction is correct
             current_index = locations.index(current_station)
@@ -146,9 +140,17 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
                 current_station = end_station
             else:
-                return "No direct route towards the destination found."
-
-            current_datetime = arrival_time_dt
+                # If the immediate next station is not in the direction, continue to look for other options.
+                alternative_station_found = False
+                for station in locations[current_index + 1:]:
+                    if station not in visited_stations:
+                        find_station = find_next_station(db_cursor, transport_type, current_station, current_datetime, visited_stations)
+                        if find_station:
+                            current_station = end_station
+                            alternative_station_found = True
+                            break
+                if not alternative_station_found:
+                    return "No direct route towards the destination found."
 
         total_minutes = total_travel_time.total_seconds() / 60
         ticket_price = 100
