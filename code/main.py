@@ -12,10 +12,10 @@ import os
 def schedule_pdf():
     transport_type = input("Would you like to see the train or bus schedule?\n").strip().lower()
     db_connection = establish_db_connection()
-    
+
     if db_connection:
         db_cursor = db_connection.cursor()
-        
+
         if transport_type == "train":
             query_schedule = "SELECT * FROM train_schedule"
             schedule_title = "Train Schedule"
@@ -25,27 +25,27 @@ def schedule_pdf():
         else:
             print("Invalid choice.")
             exit()
-        
+
         db_cursor.execute(query_schedule)
         schedule_data = db_cursor.fetchall()
         db_cursor.close()
         close_db_connection(db_connection)
-        
+
         if not schedule_data:
             print("No schedule data available.")
             exit()
-        
+
         #for row in schedule_data:
          #   print(row)
-        
+
         pdf_filename = f"{transport_type}_schedule.pdf"
         c = canvas.Canvas(pdf_filename, pagesize=letter)
         width, height = letter
-        
+
         c.setFont("Helvetica", 14)
         c.drawString(30, height - 40, schedule_title)
         c.setFont("Helvetica", 12)
-        
+
         line_height = 20
         y = height - 60
         for row in schedule_data:
@@ -56,9 +56,9 @@ def schedule_pdf():
                 c.showPage()
                 c.setFont("Helvetica", 12)
                 y = height - 40
-        
+
         c.save()
-        
+
         print(f"{schedule_title} has been saved as {pdf_filename}.")
     else:
         print("Connection to database failed.")
@@ -95,13 +95,13 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
-        
+
         transport_type = 'train' if threshold[0] == 't' else 'bus'
         query_schedule = get_schedule(transport_type)
         db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
         query_result = db_cursor.fetchone()
-        
-        
+
+
         if query_result:
             depature_time_str, arrival_time, start_station, end_station, total = query_result
 
@@ -116,10 +116,10 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
 
             wait_time = depature_time - current_datetime
-            print(wait_time)
+            wait_time = int(wait_time.total_seconds() / 60)
 
 
-      
+
 
 
 
@@ -129,16 +129,16 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 query_schedule = get_schedule(transport_type)
                 db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
                 query_result = db_cursor.fetchone()
-                
+
                 if query_result:
                     depature_time_str, arrival_time, start_station, end_station, total = query_result
                     print("Departure time (bus):", depature_time_str)
-  
+
                     depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
                     wait_time = (depature_time - current_datetime).total_seconds() / 60
                 else:
                     return "No available buses or trains match your criteria."
-            
+
             if query_result:
                 ticket_price = 100  # ÄNDRA OM DET INTE ÄR BRA NOG ELLER OM DET BARA ÄR SOSSAR SOM ÅKER, DÅ SKA EN BILJETT KOSTA 1000000000000000000000000:-
                 if funds >= ticket_price:
