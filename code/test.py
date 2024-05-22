@@ -8,6 +8,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 
+# List of stations in order
+locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
 
 def schedule_pdf():
     transport_type = input("Would you like to see the train or bus schedule?\n").strip().lower()
@@ -34,9 +36,6 @@ def schedule_pdf():
         if not schedule_data:
             print("No schedule data available.")
             exit()
-
-        #for row in schedule_data:
-         #   print(row)
 
         pdf_filename = f"{transport_type}_schedule.pdf"
         c = canvas.Canvas(pdf_filename, pagesize=letter)
@@ -137,7 +136,16 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             segment_travel_time = arrival_time_dt - current_datetime
             total_travel_time += segment_travel_time
             travel_map.append((depature_time_str, arrival_time_dt.time(), start_station, end_station, total))
-            current_station = end_station
+
+            # Check if the direction is correct
+            current_index = locations.index(current_station)
+            next_index = locations.index(end_station)
+            final_index = locations.index(person_destination)
+            if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
+                current_station = end_station
+            else:
+                return "No direct route towards the destination found."
+
             current_datetime = arrival_time_dt
 
         total_minutes = total_travel_time.total_seconds() / 60
