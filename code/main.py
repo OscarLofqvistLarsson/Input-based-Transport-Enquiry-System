@@ -9,7 +9,17 @@ from reportlab.pdfgen import canvas
 import os
 
 # List of stations in order
-locations = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
+locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
+locations_bus = ["Sölvesborg",  "Mörrum", "Karlshamn", "Bräkne-Hoby", "Ronneby","Listerby","Nättraby", "Karlskrona",  "Lyckeby", "Jämjö", ]
+
+def check_time_diff(acceptable_wait, depature_time, transport_type): # Den kollar och return Transport_type men kollar också om wait time är för långt
+    
+    if person_location in locations_bus:
+        if person_location not in locations_train:
+            transport_type = 'bus'
+            return transport_type
+    
+
 
 def schedule_pdf():
     transport_type = input("Would you like to see the train or bus schedule?\n").strip().lower()
@@ -70,24 +80,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
     current_datetime = datetime.now().replace(microsecond=0)
 
-    def get_schedule(transport_type, start_station, end_station, travel_time):
-        if transport_type == 'train':
-            query_schedule = """
-            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
-            FROM train_schedule
-            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
-            ORDER BY departure_time
-            LIMIT 1
-            """
-        else:
-            query_schedule = """
-            SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
-            FROM bus_schedule
-            WHERE start_station = %s AND end_station = %s AND departure_time >= %s
-            ORDER BY departure_time
-            LIMIT 1
-            """
-        return query_schedule
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
@@ -104,6 +96,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             if end_station not in visited_stations:
                 return station
         return None
+
 
     db_connection = establish_db_connection()
     if db_connection:
@@ -122,10 +115,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
             departure_time_str, arrival_time_str, start_station, end_station, total = find_station
 
-            # Ensure these are strings
-            if not isinstance(departure_time_str, str) or not isinstance(arrival_time_str, str):
-                return "Error: departure_time_str or arrival_time_str is not a string"
-
             departure_time = datetime.strptime(departure_time_str, "%H:%M:%S").time()
             arrival_time = datetime.strptime(arrival_time_str, "%H:%M:%S").time()
 
@@ -142,15 +131,16 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             current_datetime = arrival_datetime
 
             # Check if the direction is correct
-            current_index = locations.index(current_station)
-            next_index = locations.index(end_station)
-            final_index = locations.index(person_destination)
+            # Fixa så att den även funkar för bussar
+            current_index = locations_train.index(current_station)
+            next_index = locations_train.index(end_station)
+            final_index = locations_train.index(person_destination)
             if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
                 current_station = end_station
             else:
                 # If the immediate next station is not in the direction, continue to look for other options.
                 alternative_station_found = False
-                for station in locations[current_index + 1:]:
+                for station in locations_train[current_index + 1:]:
                     if station not in visited_stations:
                         find_station = find_next_station(db_cursor, transport_type, current_station, current_datetime, visited_stations)
                         if find_station:
