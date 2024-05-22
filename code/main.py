@@ -112,19 +112,13 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             current_datetime = datetime.strptime(current_datetime,'%H:%M:%S')
             depature_time = datetime.strptime(depature_time,'%H:%M:%S')
 
-            print(current_datetime, depature_time)
 
 
             wait_time = depature_time - current_datetime
-            wait_time = int(wait_time.total_seconds() / 60)
+            wait_time = int(wait_time.total_seconds() / 60) # Minuter
 
 
-
-
-
-
-
-            if wait_time > acceptable_wait and transport_type == 'train':
+            if wait_time > acceptable_wait and transport_type == 'train': # Acceptable_wait är i min
                 transport_type = 'bus'
                 query_schedule = get_schedule(transport_type)
                 db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
@@ -138,6 +132,23 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                     wait_time = (depature_time - current_datetime).total_seconds() / 60
                 else:
                     return "No available buses or trains match your criteria."
+                
+            if wait_time > acceptable_wait and transport_type == 'bus': # Acceptable_wait är i min
+                transport_type = 'train'
+                query_schedule = get_schedule(transport_type)
+                db_cursor.execute(query_schedule, (person_location, person_destination, current_datetime))
+                query_result = db_cursor.fetchone()
+
+                if query_result:
+                    depature_time_str, arrival_time, start_station, end_station, total = query_result
+                    print("Departure time (train):", depature_time_str)
+
+                    depature_time = datetime.strptime(depature_time_str, "%H:%M:%S")
+                    wait_time = (depature_time - current_datetime).total_seconds() / 60
+                else:
+                    return "No available buses or trains match your criteria."
+
+
 
             if query_result:
                 ticket_price = 100  # ÄNDRA OM DET INTE ÄR BRA NOG ELLER OM DET BARA ÄR SOSSAR SOM ÅKER, DÅ SKA EN BILJETT KOSTA 1000000000000000000000000:-
