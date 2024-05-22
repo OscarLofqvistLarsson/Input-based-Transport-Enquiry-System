@@ -12,13 +12,14 @@ import os
 locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
 locations_bus = ["Sölvesborg",  "Mörrum", "Karlshamn", "Bräkne-Hoby", "Ronneby","Listerby","Nättraby", "Karlskrona",  "Lyckeby", "Jämjö", ]
 
-def check_time_diff(acceptable_wait, depature_time, transport_type): # Den kollar och return Transport_type men kollar också om wait time är för långt
-    
+def check_time_diff(acceptable_wait, depature_time, transport_type,current_time): # Den kollar och return Transport_type men kollar också om wait time är för långt
     if person_location in locations_bus:
         if person_location not in locations_train:
             transport_type = 'bus'
             return transport_type
-    
+
+    current_wait = depature_time - current_time
+    print(current_wait)
 
 
 def schedule_pdf():
@@ -97,7 +98,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 return station
         return None
 
-
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -105,7 +105,10 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         current_station = person_location
         travel_map = []
         visited_stations = set()
-        transport_type = 'train' if threshold[0] == 't' else 'bus'
+
+
+
+        transport_type = check_time_diff(acceptable_wait, depature_time, transport_type,current_datetime)
 
         while current_station != person_destination:
             visited_stations.add(current_station)
@@ -163,8 +166,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             return "Insufficient funds for the ticket."
     else:
         return "Connection to database failed"
-
-
 
 if __name__ == "__main__":
 
