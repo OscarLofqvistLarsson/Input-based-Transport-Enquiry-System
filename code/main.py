@@ -12,15 +12,55 @@ import os
 locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
 locations_bus = ["Sölvesborg",  "Mörrum", "Karlshamn", "Bräkne-Hoby", "Ronneby","Listerby","Nättraby", "Karlskrona",  "Lyckeby", "Jämjö", ]
 
-def check_time_diff(acceptable_wait, depature_time, transport_type,current_time): # Den kollar och return Transport_type men kollar också om wait time är för långt
-    if person_location in locations_bus:
-        if person_location not in locations_train:
-            transport_type = 'bus'
-            return transport_type
+def check_time_diff(db_cursor, acceptable_wait, person_location, current_time, person_destination, transport_type_list):
+    def get_next_departure_time(transport_type, person_location, current_time):
+        query = f"""
+        SELECT departure_time, end_station
+        FROM {transport_type}_schedule
+        WHERE start_station = %s AND departure_time >= %s
+        ORDER BY departure_time
+        LIMIT 1
+        """
+        db_cursor.execute(query, (person_location, current_time.time()))
+        result = db_cursor.fetchone()
+        if result:
+            departure_time, end_station = result
+            departure_time = datetime.strptime(str(departure_time), "%H:%M:%S").time()
+            departure_datetime = datetime.combine(current_time.date(), departure_time)
+            if departure_datetime < current_time:
+                departure_datetime += timedelta(days=1)
+            return departure_datetime, end_station
+        return None, None
 
-    current_wait = depature_time - current_time
-    print(current_wait)
+    train_departure, train_end_station = get_next_departure_time('train', person_location, current_time)
+    bus_departure, bus_end_station = get_next_departure_time('bus', person_location, current_time)
 
+    if train_departure is None and bus_departure is None:
+        return None
+
+    train_wait = (train_departure - current_time).total_seconds() / 60 if train_departure else float('inf')
+    bus_wait = (bus_departure - current_time).total_seconds() / 60 if bus_departure else float('inf')
+
+    def is_correct_direction(start, end, destination, locations):
+        try:
+            start_index = locations.index(start)
+            end_index = locations.index(end)
+            destination_index = locations.index(destination)
+            return (end_index > start_index and destination_index > start_index) or (end_index < start_index and destination_index < start_index)
+        except ValueError:
+            return False
+
+    if train_wait <= acceptable_wait and is_correct_direction(person_location, train_end_station, person_destination, locations_train):
+        return 'train', train_departure
+    elif bus_wait <= acceptable_wait and is_correct_direction(person_location, bus_end_station, person_destination, locations_bus):
+        return 'bus', bus_departure
+    else:
+        if train_wait < bus_wait and is_correct_direction(person_location, train_end_station, person_destination, locations_train):
+            return 'train', train_departure
+        elif bus_wait < train_wait and is_correct_direction(person_location, bus_end_station, person_destination, locations_bus):
+            return 'bus', bus_departure
+        else:
+            return 'bus', bus_departure if bus_wait < float('inf') else ('train', train_departure if train_wait < float('inf') else None)
 
 def schedule_pdf():
     transport_type = input("Would you like to see the train or bus schedule?\n").strip().lower()
@@ -81,7 +121,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
     current_datetime = datetime.now().replace(microsecond=0)
 
-
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
         SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
@@ -106,9 +145,9 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         travel_map = []
         visited_stations = set()
 
-
-
-        transport_type = check_time_diff(acceptable_wait, depature_time, transport_type,current_datetime)
+        transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, person_location, current_datetime, person_destination, locations_train if threshold[0] == 't' else locations_bus)
+        if not transport_type:
+            return "No available transport matches the criteria."
 
         while current_station != person_destination:
             visited_stations.add(current_station)
@@ -134,10 +173,17 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
             current_datetime = arrival_datetime
 
             # Check if the direction is correct
-            # Fixa så att den även funkar för bussar
-            current_index = locations_train.index(current_station)
-            next_index = locations_train.index(end_station)
-            final_index = locations_train.index(person_destination)
+            if transport_type == 'train':
+                current_index = locations_train.index(current_station)
+                next_index = locations_train.index(end_station)
+                final_index = locations_train.index(person_destination)
+                locations = locations_train
+            else:
+                current_index = locations_bus.index(current_station)
+                next_index = locations_bus.index(end_station)
+                final_index = locations_bus.index(person_destination)
+                locations = locations_bus
+
             if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
                 current_station = end_station
             else:
@@ -152,6 +198,10 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                             break
                 if not alternative_station_found:
                     return "No direct route towards the destination found."
+
+            transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, current_station, current_datetime, person_destination, locations_train if transport_type == 'train' else locations_bus)
+            if not transport_type:
+                return "No available transport matches the criteria."
 
         total_minutes = total_travel_time.total_seconds() / 60
         ticket_price = 100
