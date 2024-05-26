@@ -204,7 +204,9 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 return "No available transport matches the criteria."
 
         total_minutes = total_travel_time.total_seconds() / 60
+        global ticket_price
         ticket_price = 100
+
         if funds >= ticket_price:
             result = "Travel itinerary:\n"
             for departure_time_str, arrival_time_str, start_station, end_station, total in travel_map:
@@ -217,6 +219,35 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     else:
         return "Connection to database failed"
 
+
+
+def purchase_ticket(location, destination, ticket_price, threshold, money):
+    db_connection = establish_db_connection()
+    if db_connection:
+        db_cursor = db_connection.cursor()
+
+        insert_ticket_query = """
+        INSERT INTO ticket (location, destination, price)
+        VALUES (%s, %s, %s)
+        """
+        db_cursor.execute(insert_ticket_query, (location, destination, ticket_price))
+        ticket_id = db_cursor.lastrowid # Får id från förra auto increment
+
+        insert_people_query = """
+        INSERT INTO people (threshold, funds,  people_ticketID)
+        VALUES (%s, %s, %s)
+        """
+        db_cursor.execute(insert_people_query, (threshold, money, ticket_id))
+
+        db_connection.commit()
+        close_db_connection(db_connection)
+
+        print(f"Ticket purchased for from {location} to {location}.")
+    else:
+        print("Failed to connect to the database.")
+
+
+
 if __name__ == "__main__":
 
     choice = input("Would you like to buy a ticket or see the current schedule?\n")
@@ -225,11 +256,13 @@ if __name__ == "__main__":
         person_destination = input("Where are you planning on heading today?\n")
         threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
         funds = int(input("How much money do you have for your traveling needs?\n"))
-
         result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
         print(result)
-    elif choice == "schedule":
+        buy_choice = input("Would you like to buy you ticket? ")
+        if buy_choice == "yes":
+            purchase_ticket(person_location, person_destination, ticket_price, threshold, funds)
 
+    elif choice == "schedule":
         try:
             os.remove("train_schedule.pdf")
             os.remove("bus_schedule.pdf")
