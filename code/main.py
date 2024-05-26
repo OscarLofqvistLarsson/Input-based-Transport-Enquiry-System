@@ -3,7 +3,7 @@ from tables import *
 from populate_tables import *
 from datetime import datetime, timedelta
 
-# från mjukvaru
+# från mjukvarukurs (Samuel)
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
@@ -120,6 +120,8 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
+    global ticket_price
+    ticket_price = 0 
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
@@ -137,6 +139,13 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 return station
         return None
 
+    # Kolla så att man inte har stavat fel eller något liknande
+    if person_location not in locations_train and person_location not in locations_bus:
+        return f"Error: The station '{person_location}' is not a valid station."
+    if person_destination not in locations_train and person_destination not in locations_bus:
+        return f"Error: The station '{person_destination}' is not a valid station."     
+
+
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -144,7 +153,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         current_station = person_location
         travel_map = []
         visited_stations = set()
-
+                                      # Här används inte next_departure, skla det vara såå??????
         transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, person_location, current_datetime, person_destination, locations_train if threshold[0] == 't' else locations_bus)
         if not transport_type:
             return "No available transport matches the criteria."
@@ -177,12 +186,12 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 current_index = locations_train.index(current_station)
                 next_index = locations_train.index(end_station)
                 final_index = locations_train.index(person_destination)
-                locations = locations_train
+                locations = locations_train                                     # Används inte location???????????????
             else:
                 current_index = locations_bus.index(current_station)
                 next_index = locations_bus.index(end_station)
                 final_index = locations_bus.index(person_destination)
-                locations = locations_bus
+                locations = locations_bus                                       # Används inte location??????????????? Samma är???????
 
             if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
                 current_station = end_station
@@ -198,14 +207,13 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                             break
                 if not alternative_station_found:
                     return "No direct route towards the destination found."
-
+            ticket_price += 50                                             # Här används inte next_departure, skla det vara såå??????
             transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, current_station, current_datetime, person_destination, locations_train if transport_type == 'train' else locations_bus)
             if not transport_type:
                 return "No available transport matches the criteria."
 
         total_minutes = total_travel_time.total_seconds() / 60
-        global ticket_price
-        ticket_price = 100
+
 
         if funds >= ticket_price:
             result = "Travel itinerary:\n"
@@ -221,10 +229,12 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
 
 
-def purchase_ticket(location, destination, ticket_price, threshold, money):
+def purchase_ticket(location, destination, ticket_price, threshold, funds):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
+
+        new_funds = funds - ticket_price
 
         insert_ticket_query = """
         INSERT INTO ticket (location, destination, price)
@@ -237,7 +247,7 @@ def purchase_ticket(location, destination, ticket_price, threshold, money):
         INSERT INTO people (threshold, funds,  people_ticketID)
         VALUES (%s, %s, %s)
         """
-        db_cursor.execute(insert_people_query, (threshold, money, ticket_id))
+        db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id))
 
         db_connection.commit()
         close_db_connection(db_connection)
@@ -258,9 +268,11 @@ if __name__ == "__main__":
         funds = int(input("How much money do you have for your traveling needs?\n"))
         result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
         print(result)
-        buy_choice = input("Would you like to buy you ticket? ")
-        if buy_choice == "yes":
-            purchase_ticket(person_location, person_destination, ticket_price, threshold, funds)
+
+        if "Travel itinerary" in result:
+            buy_choice = input("Would you like to buy you ticket? ")
+            if buy_choice.lower() == "yes":
+                purchase_ticket(person_location, person_destination, ticket_price, threshold, funds)
 
     elif choice == "schedule":
         try:
