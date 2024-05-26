@@ -14,12 +14,13 @@ def populate_bus():
         db_cursor = db_connection.cursor()
 
         insert_bus = """
-        INSERT INTO bus (ID, location)
-        VALUES(%s, %s)
+        INSERT INTO bus (ID, location, available)
+        VALUES(%s, %s, %s)
         """
         for x in range(len(locations)):
+            available = True
 
-            db_cursor.execute(insert_bus, (IDs[x], locations[x]))
+            db_cursor.execute(insert_bus, (IDs[x], locations[x], available))
 
         db_connection.commit()
 
@@ -40,13 +41,13 @@ def populate_train():
         db_cursor = db_connection.cursor()
 
         insert_trains = """
-        INSERT INTO train (ID,location)
-        VALUES(%s, %s)
+        INSERT INTO train (ID,location, available)
+        VALUES(%s, %s, %s)
         """
         for x in range(len(locations)):
             available = True
 
-            db_cursor.execute(insert_trains, (IDs[x], locations[x]))
+            db_cursor.execute(insert_trains, (IDs[x], locations[x], available))
 
         db_connection.commit()
 
@@ -212,8 +213,56 @@ def populate_bus_schedule():
     print("Bus schedule have been populated")
 
 
+def purchase_ticket(person_name, start_location, end_location, ticket_price, number_of_tickets, transport_type):
+    db_connection = establish_db_connection()
+
+    if db_connection:
+        db_cursor = db_connection.cursor()
+
+        # Insert ticket into ticket table
+        insert_ticket_query = """
+        INSERT INTO ticket (destination, price, numberOf)
+        VALUES (%s, %s, %s)
+        """
+        db_cursor.execute(insert_ticket_query, (end_location, ticket_price, number_of_tickets))
+        ticket_id = db_cursor.lastrowid  # Get the last inserted ticketID
+
+        # Insert person into people table
+        insert_people_query = """
+        INSERT INTO people (threshold, location, destination, funds, people_ticketID)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        threshold = 0  # Assuming threshold is 0 for this example
+        funds = 0      # Assuming funds are 0 for this example
+
+        db_cursor.execute(insert_people_query, (threshold, start_location, end_location, funds, ticket_id))
+
+        db_connection.commit()
+
+        close_db_connection(db_connection)
+
+        print(f"Ticket purchased for {person_name} from {start_location} to {end_location}.")
+    else:
+        print("Failed to connect to the database.")
+
 if __name__ == "__main__":
-    populate_train()
-    populate_bus()
-    populate_train_schedule()
-    populate_bus_schedule()
+
+    choice = input("Would you like to buy a ticket or see the current schedule?\n")
+    if choice == "ticket":
+        person_location = input("At what station are you at the moment?\n")
+        person_destination = input("Where are you planning on heading today?\n")
+        threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
+        funds = int(input("How much money do you have for your traveling needs?\n"))
+
+        result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
+        print(result)
+    elif choice == "schedule":
+
+        try:
+            os.remove("train_schedule.pdf")
+            os.remove("bus_schedule.pdf")
+        except:
+            FileNotFoundError
+
+        schedule_pdf()
+

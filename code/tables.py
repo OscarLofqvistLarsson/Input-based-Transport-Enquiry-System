@@ -6,9 +6,9 @@ def create_tables():
     CREATE_TICKET_TABLE = """
         CREATE TABLE IF NOT EXISTS ticket(
             ticketID INT AUTO_INCREMENT PRIMARY KEY,
+            location VARCHAR(255) NOT NULL,
             destination VARCHAR(255) NOT NULL,
-            price INT NOT NULL,
-            numberOf INT NOT NULL
+            price INT NOT NULL
         )
     """
 
@@ -16,8 +16,6 @@ def create_tables():
     CREATE_PEOPLE_TABLE = """
         CREATE TABLE IF NOT EXISTS people(
             threshold INT NOT NULL,
-            location VARCHAR(255) NOT NULL,
-            destination VARCHAR(255) NOT NULL,
             funds INT NOT NULL,
             people_ticketID INT,
             FOREIGN KEY (people_ticketID) REFERENCES ticket(ticketID),
@@ -29,8 +27,7 @@ def create_tables():
     CREATE_TRAIN_TABLE = """
         CREATE TABLE IF NOT EXISTS train(
             ID VARCHAR(255) PRIMARY KEY,
-            location VARCHAR(255) NOT NULL,
-            available BOOL NOT NULL
+            location VARCHAR(255) NOT NULL
         )
         """
 
@@ -38,8 +35,7 @@ def create_tables():
     CREATE_BUS_TABLE = """
         CREATE TABLE IF NOT EXISTS bus(
             ID VARCHAR(255) PRIMARY KEY,
-            location VARCHAR(255) NOT NULL,
-            available BOOL NOT NULL
+            location VARCHAR(255) NOT NULL
         )
     """
 
