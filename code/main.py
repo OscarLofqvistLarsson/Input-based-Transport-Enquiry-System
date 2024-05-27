@@ -145,7 +145,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     if person_destination not in locations_train and person_destination not in locations_bus:
         return f"Error: The station '{person_destination}' is not a valid station."
 
-
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -225,8 +224,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     else:
         return "Connection to database failed"
 
-
-
 def purchase_ticket(location, destination, ticket_price, threshold, funds):
     db_connection = establish_db_connection()
     if db_connection:
@@ -254,10 +251,7 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds):
     else:
         print("Failed to connect to the database.")
 
-
-
 if __name__ == "__main__":
-
     choice = input("Would you like to buy a ticket or see the current schedule?\n")
     if choice == "ticket":
         person_location = input("At what station are you at the moment?\n")
