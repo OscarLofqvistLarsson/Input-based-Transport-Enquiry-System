@@ -234,6 +234,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     else:
         return "Connection to database failed"
 
+# Funktion
 def purchase_ticket(location, destination, ticket_price, threshold, funds, fname):
     db_connection = establish_db_connection()
     if db_connection:
@@ -280,29 +281,27 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
         print("Failed to connect to the database.")
 
 
-
+# Procedure:
 def check_name(name):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        try:
-            db_cursor.callproc("CheckPersonName", (name,))
-            result_name = db_cursor.fetchone()
-        except mysql.connector.Error as err:
-            print("Error:", err)
-            result_name = None
+        # Prepare the stored procedure call
+        call_proc_query = "CALL check_name(%s, @threshold, @funds)"
+        db_cursor.execute(call_proc_query, (name,))
 
-        db_connection.close()
+        # Fetch the output parameters
+        db_cursor.execute("SELECT @threshold, @funds")
+        result_name = db_cursor.fetchone()
 
-        if result_name:
-            return result_name
-        else:
-            print(f"No information found for {name}.")
-            return None
+        db_cursor.close()
+        close_db_connection(db_connection)
+
+        return result_name
     else:
-        print("Failed to connect to the database.")
         return None
+
 
 
 def get_person_info(name):
@@ -333,49 +332,55 @@ def get_person_info(name):
 
 
 if __name__ == "__main__":
-    choice = input("Would you like to buy a ticket, see the current schedule or see information regarding your info?\n")
-    if choice == "ticket":
-        name_tell = input("What is your name?\n")
-        name_check = check_name(name_tell)
-        if name_check:
-            person_location = input("At what station are you at the moment?\n")
-            person_destination = input("Where are you planning on heading today?\n")
-            threshold = name_check[0]
-            funds = name_check[1]
-            result = estimated_ticket(person_location, person_destination, threshold, funds)
-            print(result)
 
-        else:
-            person_location = input("At what station are you at the moment?\n")
-            person_destination = input("Where are you planning on heading today?\n")
-            threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
-            funds = int(input("How much money do you have for your traveling needs?\n"))
-            result = estimated_ticket(person_location, person_destination, threshold, funds)
-            print(result)
+    while True:
+        choice = input("Would you like to buy a ticket, see the current schedule or see information regarding your info?\n")
+        if choice == "ticket":
+            name_tell = input("What is your name?\n")
+            name_check = check_name(name_tell)
+            if name_check:
+                person_location = input("At what station are you at the moment?\n")
+                person_destination = input("Where are you planning on heading today?\n")
+                threshold = name_check[0]
+                funds = name_check[1]
+                result = estimated_ticket(person_location, person_destination, threshold, funds)
+                print(result)
 
-        if "Travel itinerary" in result:
-            buy_choice = input("Would you like to buy you ticket? ")
-            if buy_choice.lower() == "yes":
-                purchase_ticket(person_location ,person_destination, ticket_price, threshold, funds,name_tell)
+            else:
+                person_location = input("At what station are you at the moment?\n")
+                person_destination = input("Where are you planning on heading today?\n")
+                threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
+                funds = int(input("How much money do you have for your traveling needs?\n"))
+                result = estimated_ticket(person_location, person_destination, threshold, funds)
+                print(result)
 
-    elif choice == "schedule":
-        try:
-            os.remove("train_schedule.pdf")
-            os.remove("bus_schedule.pdf")
+            if "Travel itinerary" in result:
+                buy_choice = input("Would you like to buy you ticket? ")
+                if buy_choice.lower() == "yes":
+                    purchase_ticket(person_location ,person_destination, ticket_price, threshold, funds,name_tell)
 
-            schedule_pdf()
-            pdf_train = "train_schedule.pdf"
-            pdf_bus = "bus_schedule.pdf"
+        if choice == "schedule":
+            try:
+                os.remove("train_schedule.pdf")
+                os.remove("bus_schedule.pdf")
 
-            if os.name == 'nt':  # För Windows
-                if os.path.exists(pdf_train):
-                    os.system(f'start {pdf_train}')
+                schedule_pdf()
+                pdf_train = "train_schedule.pdf"
+                pdf_bus = "bus_schedule.pdf"
 
-                if os.path.exists(pdf_bus):
-                    os.system(f'start {pdf_bus}')
-        except:
-            FileNotFoundError
+                if os.name == 'nt':  # För Windows
+                    if os.path.exists(pdf_train):
+                        os.system(f'start {pdf_train}')
 
-    elif choice == "info":
-        name_tell = input("What is your name?\n")
-        get_person_info(name_tell)
+                    if os.path.exists(pdf_bus):
+                        os.system(f'start {pdf_bus}')
+            except:
+                FileNotFoundError
+
+        if choice == "info":
+            name_tell = input("What is your name?\n")
+            get_person_info(name_tell)
+        
+        if choice == "exit":
+            print("Exiting program...")
+            break
