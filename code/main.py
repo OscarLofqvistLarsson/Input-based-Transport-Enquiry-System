@@ -265,7 +265,7 @@ def check_name(name):
         db_cursor = db_connection.cursor()
 
         check_for_name = f"""
-        SELECT threshold, funds from people WHERE fname = {name}
+        SELECT threshold, funds from people WHERE fname = "{name}"
         """
         db_cursor.execute(check_for_name)
         result_name = db_cursor.fetchall() # threshold och funds
