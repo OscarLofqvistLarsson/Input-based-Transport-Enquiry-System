@@ -70,10 +70,40 @@ def schedule_pdf():
         db_cursor = db_connection.cursor()
 
         if transport_type == "train":
-            query_schedule = "SELECT * FROM train_schedule"
+            query_schedule = """
+            SELECT
+                ts.departure_time,
+                ts.arrival_time,
+                ts.total,
+                ts.start_station,
+                t1.location AS start_station_location,
+                ts.end_station,
+                t2.location AS end_station_location
+            FROM
+                train_schedule ts
+            JOIN
+                train t1 ON ts.start_station = t1.ID
+            JOIN
+                train t2 ON ts.end_station = t2.ID
+            """
             schedule_title = "Train Schedule"
         elif transport_type == "bus":
-            query_schedule = "SELECT * FROM bus_schedule"
+            query_schedule = """
+            SELECT
+                bs.departure_time,
+                bs.arrival_time,
+                bs.total,
+                bs.start_station,
+                b1.location AS start_station_location,
+                bs.end_station,
+                b2.location AS end_station_location
+            FROM
+                bus_schedule bs
+            JOIN
+                bus b1 ON bs.start_station = b1.ID
+            JOIN
+                bus b2 ON bs.end_station = b2.ID
+            """
             schedule_title = "Bus Schedule"
         else:
             print("Invalid choice.")
@@ -99,6 +129,7 @@ def schedule_pdf():
         line_height = 20
         y = height - 60
         for row in schedule_data:
+            # Include station IDs and their corresponding locations
             row_str = " | ".join(str(item) for item in row)
             c.drawString(30, y, row_str)
             y -= line_height
@@ -114,7 +145,6 @@ def schedule_pdf():
         print("Connection to database failed.")
 
 def estimated_ticket(person_location, person_destination, threshold, funds):
-    
     global ticket_price
     ticket_price = 0
 
