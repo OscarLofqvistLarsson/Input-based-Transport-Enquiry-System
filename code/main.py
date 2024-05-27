@@ -279,17 +279,31 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
     else:
         print("Failed to connect to the database.")
 
+
+
 def check_name(name):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        check_for_name = f"""
-        SELECT threshold, funds from people WHERE fname = "{name}"
-        """
-        db_cursor.execute(check_for_name)
-        result_name = db_cursor.fetchall()[0] # threshold och funds
-        return result_name
+        try:
+            db_cursor.callproc("CheckPersonName", (name,))
+            result_name = db_cursor.fetchone()
+        except mysql.connector.Error as err:
+            print("Error:", err)
+            result_name = None
+
+        db_connection.close()
+
+        if result_name:
+            return result_name
+        else:
+            print(f"No information found for {name}.")
+            return None
+    else:
+        print("Failed to connect to the database.")
+        return None
+
 
 def get_person_info(name):
     db_connection = establish_db_connection()
@@ -319,7 +333,6 @@ def get_person_info(name):
 
 
 if __name__ == "__main__":
-
     choice = input("Would you like to buy a ticket, see the current schedule or see information regarding your info?\n")
     if choice == "ticket":
         name_tell = input("What is your name?\n")
@@ -329,7 +342,7 @@ if __name__ == "__main__":
             person_destination = input("Where are you planning on heading today?\n")
             threshold = name_check[0]
             funds = name_check[1]
-            result = estimated_ticket(person_location, person_destination, threshold, funds) 
+            result = estimated_ticket(person_location, person_destination, threshold, funds)
             print(result)
 
         else:
@@ -343,7 +356,7 @@ if __name__ == "__main__":
         if "Travel itinerary" in result:
             buy_choice = input("Would you like to buy you ticket? ")
             if buy_choice.lower() == "yes":
-                purchase_ticket(person_location, person_destination, ticket_price, threshold, funds, name_tell)
+                purchase_ticket(person_location ,person_destination, ticket_price, threshold, funds,name_tell)
 
     elif choice == "schedule":
         try:
