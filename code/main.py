@@ -227,7 +227,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     else:
         return "Connection to database failed"
 
-def purchase_ticket(location, destination, ticket_price, threshold, funds):
+def purchase_ticket(location, destination, ticket_price, threshold, funds, fname):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -241,15 +241,19 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds):
         ticket_id = db_cursor.fetchone()[0]
         print(ticket_id)
 
+        if ticket_id:
 
+            
 
+            return ....
+        
         new_funds = funds - ticket_price
 
         insert_people_query = """
-        INSERT INTO people (threshold, funds,  people_ticketID)
-        VALUES (%s, %s, %s)
+        INSERT INTO people (threshold, funds,  people_ticketID, fname)
+        VALUES (%s, %s, %s, %s)
         """
-        db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id))
+        db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id, fname))
 
         db_connection.commit()
         close_db_connection(db_connection)
@@ -284,19 +288,20 @@ if __name__ == "__main__":
             threshold = name_check[0]
             funds = name_check[1]
             result = estimated_ticket(person_location, person_destination, threshold, funds) 
+            print(result)
 
-
-        person_location = input("At what station are you at the moment?\n")
-        person_destination = input("Where are you planning on heading today?\n")
-        threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
-        funds = int(input("How much money do you have for your traveling needs?\n"))
-        result = estimated_ticket(person_location, person_destination, threshold, funds) 
-        print(result)
+        else:
+            person_location = input("At what station are you at the moment?\n")
+            person_destination = input("Where are you planning on heading today?\n")
+            threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
+            funds = int(input("How much money do you have for your traveling needs?\n"))
+            result = estimated_ticket(person_location, person_destination, threshold, funds) 
+            print(result)
 
         if "Travel itinerary" in result:
             buy_choice = input("Would you like to buy you ticket? ")
             if buy_choice.lower() == "yes":
-                purchase_ticket(person_location, person_destination, ticket_price, threshold, funds)
+                purchase_ticket(person_location, person_destination, ticket_price, threshold, funds, name_tell)
 
     elif choice == "schedule":
         try:
