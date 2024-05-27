@@ -15,6 +15,7 @@ def create_tables():
     # Table for peoples
     CREATE_PEOPLE_TABLE = """
         CREATE TABLE IF NOT EXISTS people(
+            fname varchar (20) NOT NULL,
             threshold char(3) NOT NULL,
             funds INT NOT NULL,
             people_ticketID INT,

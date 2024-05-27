@@ -114,14 +114,17 @@ def schedule_pdf():
         print("Connection to database failed.")
 
 def estimated_ticket(person_location, person_destination, threshold, funds):
+    
+    global ticket_price
+    ticket_price = 0
+
     if threshold[0] == "t" or threshold[0] == "b":
         acceptable_wait = int(threshold[1:]) * 5
     else:
         return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
-    global ticket_price
-    ticket_price = 0
+
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
@@ -229,14 +232,18 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds):
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        new_funds = funds - ticket_price
 
-        insert_ticket_query = """
-        INSERT INTO ticket (location, destination, price)
-        VALUES (%s, %s, %s)
+        # Anropa funktion.sql
+        check_or_create_ticket_query = """
+        SELECT check_or_create_ticket(%s, %s, %s)
         """
-        db_cursor.execute(insert_ticket_query, (location, destination, ticket_price))
-        ticket_id = db_cursor.lastrowid # Får id från förra auto increment
+        db_cursor.execute(check_or_create_ticket_query, (person_location, person_destination, ticket_price))
+        ticket_id = db_cursor.fetchone()[0]
+        print(ticket_id)
+
+
+
+        new_funds = funds - ticket_price
 
         insert_people_query = """
         INSERT INTO people (threshold, funds,  people_ticketID)
@@ -247,18 +254,43 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds):
         db_connection.commit()
         close_db_connection(db_connection)
 
-        print(f"Ticket purchased for from {location} to {location}.")
+        print(f"Ticket purchased for from {location} to {destination}.")
     else:
         print("Failed to connect to the database.")
 
+def check_name(name):
+    
+    db_connection = establish_db_connection()
+    if db_connection:
+        db_cursor = db_connection.cursor()
+
+        check_for_name = f"""
+        SELECT threshold, funds from people WHERE fname = {name}
+        """
+        db_cursor.execute(check_for_name)
+        result_name = db_cursor.fetchall() # threshold och funds
+        return result_name
+
+
 if __name__ == "__main__":
+
     choice = input("Would you like to buy a ticket or see the current schedule?\n")
     if choice == "ticket":
+        name_tell = input("What is your name? ")
+        name_check = check_name(name_tell)
+        if name_check:
+            person_location = input("At what station are you at the moment?\n")
+            person_destination = input("Where are you planning on heading today?\n")
+            threshold = name_check[0]
+            funds = name_check[1]
+            result = estimated_ticket(person_location, person_destination, threshold, funds) 
+
+
         person_location = input("At what station are you at the moment?\n")
         person_destination = input("Where are you planning on heading today?\n")
         threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
         funds = int(input("How much money do you have for your traveling needs?\n"))
-        result = estimated_ticket(person_location, person_destination, threshold, funds) # Estimated ticket ska ställa en fråga om man vill köpa den, inte tillagt
+        result = estimated_ticket(person_location, person_destination, threshold, funds) 
         print(result)
 
         if "Travel itinerary" in result:
@@ -274,3 +306,7 @@ if __name__ == "__main__":
             FileNotFoundError
 
         schedule_pdf()
+
+# 1. Fråga vad människan heter
+# 2. Finns namn redan i databas, använd dess funds och threshold
+# 3. som vanligt.... (kunna äga flera biljetter)
