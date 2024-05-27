@@ -232,7 +232,6 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
     if db_connection:
         db_cursor = db_connection.cursor()
 
-
         # Anropa funktion.sql
         check_or_create_ticket_query = """
         SELECT check_or_create_ticket(%s, %s, %s)
@@ -242,11 +241,15 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
         print(ticket_id)
 
         if ticket_id:
+            fetch_from_id = f"""
+            SELECT * FROM ticket WHERE ticketID = {ticket_id}
+            """
 
-            
+            db_cursor.execute(fetch_from_id,)
+            res = db_cursor.fetchall()
 
-            return ....
-        
+            return res
+
         new_funds = funds - ticket_price
 
         insert_people_query = """
@@ -263,7 +266,6 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
         print("Failed to connect to the database.")
 
 def check_name(name):
-    
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -280,7 +282,7 @@ if __name__ == "__main__":
 
     choice = input("Would you like to buy a ticket or see the current schedule?\n")
     if choice == "ticket":
-        name_tell = input("What is your name? ")
+        name_tell = input("What is your name?\n")
         name_check = check_name(name_tell)
         if name_check:
             person_location = input("At what station are you at the moment?\n")
@@ -295,7 +297,7 @@ if __name__ == "__main__":
             person_destination = input("Where are you planning on heading today?\n")
             threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
             funds = int(input("How much money do you have for your traveling needs?\n"))
-            result = estimated_ticket(person_location, person_destination, threshold, funds) 
+            result = estimated_ticket(person_location, person_destination, threshold, funds)
             print(result)
 
         if "Travel itinerary" in result:
