@@ -121,7 +121,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
 
     current_datetime = datetime.now().replace(microsecond=0)
     global ticket_price
-    ticket_price = 0 
+    ticket_price = 0
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
@@ -143,7 +143,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     if person_location not in locations_train and person_location not in locations_bus:
         return f"Error: The station '{person_location}' is not a valid station."
     if person_destination not in locations_train and person_destination not in locations_bus:
-        return f"Error: The station '{person_destination}' is not a valid station."     
+        return f"Error: The station '{person_destination}' is not a valid station."
 
 
     db_connection = establish_db_connection()
@@ -153,7 +153,6 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
         current_station = person_location
         travel_map = []
         visited_stations = set()
-                                      # Här används inte next_departure, skla det vara såå??????
         transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, person_location, current_datetime, person_destination, locations_train if threshold[0] == 't' else locations_bus)
         if not transport_type:
             return "No available transport matches the criteria."
@@ -186,12 +185,11 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 current_index = locations_train.index(current_station)
                 next_index = locations_train.index(end_station)
                 final_index = locations_train.index(person_destination)
-                locations = locations_train                                     # Används inte location???????????????
+
             else:
                 current_index = locations_bus.index(current_station)
                 next_index = locations_bus.index(end_station)
                 final_index = locations_bus.index(person_destination)
-                locations = locations_bus                                       # Används inte location??????????????? Samma är???????
 
             if (next_index > current_index and final_index > current_index) or (next_index < current_index and final_index < current_index):
                 current_station = end_station
