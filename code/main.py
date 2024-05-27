@@ -71,44 +71,24 @@ def schedule_pdf():
 
         if transport_type == "train":
             query_schedule = """
-            SELECT
-                ts.departure_time,
-                ts.arrival_time,
-                ts.total,
-                ts.start_station,
-                t1.location AS start_station_location,
-                ts.end_station,
-                t2.location AS end_station_location
-            FROM
-                train_schedule ts
-            JOIN
-                train t1 ON ts.start_station = t1.ID
-            JOIN
-                train t2 ON ts.end_station = t2.ID
+            SELECT ts.departure_time, ts.arrival_time, ts.start_station, t1.ID AS start_station_id, ts.end_station, t2.ID AS end_station_id, ts.total
+            FROM train_schedule ts
+            JOIN train t1 ON ts.start_station = t1.location
+            JOIN train t2 ON ts.end_station = t2.location
             """
             schedule_title = "Train Schedule"
+
         elif transport_type == "bus":
             query_schedule = """
-            SELECT
-                bs.departure_time,
-                bs.arrival_time,
-                bs.total,
-                bs.start_station,
-                b1.location AS start_station_location,
-                bs.end_station,
-                b2.location AS end_station_location
-            FROM
-                bus_schedule bs
-            JOIN
-                bus b1 ON bs.start_station = b1.ID
-            JOIN
-                bus b2 ON bs.end_station = b2.ID
+            SELECT bs.departure_time, bs.arrival_time, bs.start_station, b1.ID AS start_station_id, bs.end_station, b2.ID AS end_station_id, bs.total
+            FROM bus_schedule bs
+            JOIN bus b1 ON bs.start_station = b1.location
+            JOIN bus b2 ON bs.end_station = b2.location
             """
             schedule_title = "Bus Schedule"
         else:
             print("Invalid choice.")
             exit()
-
         db_cursor.execute(query_schedule)
         schedule_data = db_cursor.fetchall()
         db_cursor.close()
@@ -129,7 +109,6 @@ def schedule_pdf():
         line_height = 20
         y = height - 60
         for row in schedule_data:
-            # Include station IDs and their corresponding locations
             row_str = " | ".join(str(item) for item in row)
             c.drawString(30, y, row_str)
             y -= line_height
@@ -350,6 +329,16 @@ if __name__ == "__main__":
             FileNotFoundError
 
         schedule_pdf()
+        pdf_train = "train_schedule.pdf"
+        pdf_bus = "bus_schedule.pdf"
+
+        if os.name == 'nt':  # För Windows
+            if os.path.exists(pdf_train):
+                os.system(f'start {pdf_train}')
+
+            if os.path.exists(pdf_bus):
+                os.system(f'start {pdf_bus}')
+
 
 # 1. Fråga vad människan heter
 # 2. Finns namn redan i databas, använd dess funds och threshold
