@@ -6,4 +6,4 @@ General guidelines for queries:
 4. You should make use of at least two of the following:
     a. Triggers
     b. Procedures
-    c. Functions
+    c. Functions KLART
