@@ -2,8 +2,6 @@ from connection import *
 from tables import *
 from populate_tables import *
 from datetime import datetime, timedelta
-
-# från mjukvarukurs (Samuel) jag har faktiskt med me de (Oscar)
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
@@ -293,10 +291,36 @@ def check_name(name):
         result_name = db_cursor.fetchall()[0] # threshold och funds
         return result_name
 
+def get_person_info(name):
+    db_connection = establish_db_connection()
+    if db_connection:
+        db_cursor = db_connection.cursor()
+        query = """
+        SELECT person_name, remaining_funds, ticket_start, ticket_destination, ticket_price
+        FROM person_ticket_info
+        WHERE person_name = %s
+        """
+        db_cursor.execute(query, (name,))
+        person_info = db_cursor.fetchall()
+        db_cursor.close()
+        close_db_connection(db_connection)
+
+        if person_info:
+            print(f"Name: {name}")
+            print(f"Remaining Funds: {person_info[-1][1]}") # take the latest row
+            print("Tickets:")
+            for row in person_info:
+                if row[2] and row[3]:  # Check if ticket_start and ticket_destination are not None
+                    print(f"  From {row[2]} to {row[3]}, price: {row[4]}")
+        else:
+            print("No information found for this person.")
+    else:
+        print("Connection to database failed.")
+
 
 if __name__ == "__main__":
 
-    choice = input("Would you like to buy a ticket or see the current schedule?\n")
+    choice = input("Would you like to buy a ticket, see the current schedule or see information regarding your info?\n")
     if choice == "ticket":
         name_tell = input("What is your name?\n")
         name_check = check_name(name_tell)
@@ -325,21 +349,20 @@ if __name__ == "__main__":
         try:
             os.remove("train_schedule.pdf")
             os.remove("bus_schedule.pdf")
+
+            schedule_pdf()
+            pdf_train = "train_schedule.pdf"
+            pdf_bus = "bus_schedule.pdf"
+
+            if os.name == 'nt':  # För Windows
+                if os.path.exists(pdf_train):
+                    os.system(f'start {pdf_train}')
+
+                if os.path.exists(pdf_bus):
+                    os.system(f'start {pdf_bus}')
         except:
             FileNotFoundError
 
-        schedule_pdf()
-        pdf_train = "train_schedule.pdf"
-        pdf_bus = "bus_schedule.pdf"
-
-        if os.name == 'nt':  # För Windows
-            if os.path.exists(pdf_train):
-                os.system(f'start {pdf_train}')
-
-            if os.path.exists(pdf_bus):
-                os.system(f'start {pdf_bus}')
-
-
-# 1. Fråga vad människan heter
-# 2. Finns namn redan i databas, använd dess funds och threshold
-# 3. som vanligt.... (kunna äga flera biljetter)
+    elif choice == "info":
+        name_tell = input("What is your name?\n")
+        get_person_info(name_tell)
