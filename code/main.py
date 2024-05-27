@@ -3,7 +3,7 @@ from tables import *
 from populate_tables import *
 from datetime import datetime, timedelta
 
-# från mjukvarukurs (Samuel)
+# från mjukvarukurs (Samuel) jag har faktiskt med me de (Oscar)
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
@@ -205,7 +205,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                             break
                 if not alternative_station_found:
                     return "No direct route towards the destination found."
-            ticket_price += 50                                             # Här används inte next_departure, skla det vara såå??????
+            ticket_price += 50
             transport_type, next_departure = check_time_diff(db_cursor, acceptable_wait, current_station, current_datetime, person_destination, locations_train if transport_type == 'train' else locations_bus)
             if not transport_type:
                 return "No available transport matches the criteria."
