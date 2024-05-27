@@ -29,7 +29,6 @@ This Python program allows users to book tickets for public transport (trains an
 - To check personal information, users need to provide their name, and details such as remaining funds and booked tickets will be displayed.
 
 ## Contributors
-- [Your Name]
+- Samuel Ek
+- Oscar Lövkvist Larsson 
 
-## License
-This project is licensed under the [MIT License](LICENSE).
