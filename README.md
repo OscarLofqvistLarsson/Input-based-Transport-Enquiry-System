@@ -1,52 +1,35 @@
-# Voice-based Transport Enquiry System
+# Public Transport Ticket Booking System
 
-Welcome to the Voice-based Transport Enquiry System repository! This project aims to provide commuters with a convenient and efficient way to access transport information through voice commands.
+## Description
+This Python program allows users to book tickets for public transport (trains and buses), view schedules, and check personal information related to their bookings. It interacts with a MySQL database to store and retrieve data.
 
-## Table of Contents
+## Files
+- **connection.py**: Contains functions to establish and close connections to the MySQL database.
+- **tables.py**: Contains SQL queries to create database tables.
+- **populate_tables.py**: Contains functions to populate the database tables with initial data.
+- **main.py**: Main program file where the core functionality is implemented.
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+## Dependencies
+- MySQL Connector Python: Used to connect Python to MySQL databases.
+- ReportLab: Used to generate PDF files for train and bus schedules.
 
-## Introduction
+## How to Run
+1. Install the necessary dependencies using `pip install mysql-connector-python reportlab`.
+2. Set up a MySQL database and configure the connection details in `connection.py`.
+3. Run `python tables.py` to create tables.
+4. Run `python populate_tables.py` to populate the database tables.
+5. INSERT necessary `SQL - files` into you database
+6. Run `python main.py` to start the program.
 
-Long queues and time-consuming processes at transport terminals for gathering information about available transport options are common challenges faced by commuters. The Voice-based Transport Enquiry System offers a modern solution to this problem by leveraging voice recognition technology to enable users to inquire about bus, train, or flight details through voice commands.
-
-## Features
-
-- **Voice Recognition:** Users can interact with the system through spoken commands, eliminating the need for manual input.
-- **Text-to-Speech Output:** The system generates responses in a voice-based format, providing commuters with convenient access to transport information.
-- **Real-time Data:** Integrates with transport databases or APIs to fetch real-time information about available transport options, schedules, and routes.
-- **User Authentication:** Implements user authentication mechanisms to ensure the security of the system and deliver personalized responses based on user preferences and history.
-
-## Installation
-
-To install the Voice-based Transport Enquiry System, follow these steps:
-
-1. Clone the repository: `git clone https://github.com/yourusername/voice-transport-enquiry.git`
-2. Install the required dependencies: `pip install -r requirements.txt`
-3. Set up the database: [instructions here]
 
 ## Usage
+- Upon running the program, users are prompted to choose between buying a ticket, viewing the current schedule, or checking personal information.
+- To buy a ticket, users need to provide their name, current station, destination, preference (train/bus), and available funds.
+- To view the schedule, users can choose between trains and buses and a PDF with the schedule will be generated.
+- To check personal information, users need to provide their name, and details such as remaining funds and booked tickets will be displayed.
 
-To use the Voice-based Transport Enquiry System, follow these steps:
-
-1. Start the server: `python app.py`
-2. Navigate to the provided URL in your web browser.
-3. Speak your inquiry into the microphone and wait for the system's response.
-
-## Contributing
-
-Contributions are welcome! If you'd like to contribute to the project, please follow these guidelines:
-
-1. Fork the repository and create your branch: `git checkout -b feature-name`
-2. Commit your changes: `git commit -am 'Add new feature'`
-3. Push to your branch: `git push origin feature-name`
-4. Submit a pull request with a detailed description of your changes.
+## Contributors
+- [Your Name]
 
 ## License
-
 This project is licensed under the [MIT License](LICENSE).

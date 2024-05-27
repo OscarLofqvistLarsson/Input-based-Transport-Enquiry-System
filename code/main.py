@@ -149,7 +149,7 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
                 return station
         return None
 
-    # Kolla så att man inte har stavat fel eller något liknande
+    # Check for misspell
     if person_location not in locations_train and person_location not in locations_bus:
         return f"Error: The station '{person_location}' is not a valid station."
     if person_destination not in locations_train and person_destination not in locations_bus:
@@ -234,13 +234,13 @@ def estimated_ticket(person_location, person_destination, threshold, funds):
     else:
         return "Connection to database failed"
 
-# Funktion
+# Function
 def purchase_ticket(location, destination, ticket_price, threshold, funds, fname):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        # Anropa funktion.sql
+        # Call funktion.sql
         check_ticket_query = """
         SELECT people_ticketID FROM people
         WHERE fname = %s AND people_ticketID IN (
@@ -368,7 +368,7 @@ if __name__ == "__main__":
                 pdf_train = "train_schedule.pdf"
                 pdf_bus = "bus_schedule.pdf"
 
-                if os.name == 'nt':  # För Windows
+                if os.name == 'nt':  # For Windows
                     if os.path.exists(pdf_train):
                         os.system(f'start {pdf_train}')
 
