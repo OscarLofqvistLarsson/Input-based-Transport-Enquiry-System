@@ -233,35 +233,42 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
         db_cursor = db_connection.cursor()
 
         # Anropa funktion.sql
+        check_ticket_query = """
+        SELECT people_ticketID FROM people
+        WHERE fname = %s AND people_ticketID IN (
+            SELECT ticketID FROM ticket
+            WHERE location = %s AND destination = %s AND price = %s
+        )
+        """
+        db_cursor.execute(check_ticket_query, (fname, location, destination, ticket_price))
+        existing_ticket = db_cursor.fetchone()
+
+        if existing_ticket:
+            print("You already have this ticket.")
+            return
+
+        # If the person doesn't have the ticket, proceed with purchase
         check_or_create_ticket_query = """
         SELECT check_or_create_ticket(%s, %s, %s)
         """
-        db_cursor.execute(check_or_create_ticket_query, (person_location, person_destination, ticket_price))
+        db_cursor.execute(check_or_create_ticket_query, (location, destination, ticket_price))
         ticket_id = db_cursor.fetchone()[0]
-        print(ticket_id)
 
         if ticket_id:
-            fetch_from_id = f"""
-            SELECT * FROM ticket WHERE ticketID = {ticket_id}
+            # Insert a record into the people table
+            insert_people_query = """
+            INSERT INTO people (threshold, funds, people_ticketID, fname)
+            VALUES (%s, %s, %s, %s)
             """
+            new_funds = funds - ticket_price
+            db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id, fname))
 
-            db_cursor.execute(fetch_from_id,)
-            res = db_cursor.fetchall()
+            db_connection.commit()
+            close_db_connection(db_connection)
 
-            return res
-
-        new_funds = funds - ticket_price
-
-        insert_people_query = """
-        INSERT INTO people (threshold, funds,  people_ticketID, fname)
-        VALUES (%s, %s, %s, %s)
-        """
-        db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id, fname))
-
-        db_connection.commit()
-        close_db_connection(db_connection)
-
-        print(f"Ticket purchased for from {location} to {destination}.")
+            print(f"Ticket purchased from {location} to {destination}.")
+        else:
+            print("Failed to create ticket.")
     else:
         print("Failed to connect to the database.")
 
@@ -274,7 +281,7 @@ def check_name(name):
         SELECT threshold, funds from people WHERE fname = "{name}"
         """
         db_cursor.execute(check_for_name)
-        result_name = db_cursor.fetchall() # threshold och funds
+        result_name = db_cursor.fetchall()[0] # threshold och funds
         return result_name
 
 
