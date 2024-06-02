@@ -1,6 +1,16 @@
 from connection import *
 
 def create_tables():
+    # Table for people
+    CREATE_PEOPLE_TABLE = """
+        CREATE TABLE IF NOT EXISTS people(
+            fname VARCHAR(20) NOT NULL PRIMARY KEY,
+            funds INT NOT NULL,
+            people_ticket_id INT NOT NULL,
+            UNIQUE KEY (people_ticket_id)
+        )
+    """
+
     # Table for a specific ticket with an ID as the key
     CREATE_TICKET_TABLE = """
         CREATE TABLE IF NOT EXISTS ticket(
@@ -8,19 +18,8 @@ def create_tables():
             location VARCHAR(255) NOT NULL,
             destination VARCHAR(255) NOT NULL,
             price INT NOT NULL,
-            people_ticket_id INT,
-            FOREIGN KEY (people_ticket_id) REFERENCES people(people_ticket_id),
-
-        )
-    """
-
-    # Table for people
-    CREATE_PEOPLE_TABLE = """
-        CREATE TABLE IF NOT EXISTS people(
-            fname VARCHAR(20) NOT NULL PRIMARY KEY,
-            funds INT NOT NULL,
-            people_ticket_id INT,
-            UNIQUE KEY (people_ticket_id)
+            people_ticket_id INT NOT NULL,
+            FOREIGN KEY (people_ticket_id) REFERENCES people(people_ticket_id)
         )
     """
 
@@ -68,18 +67,7 @@ def create_tables():
             fname VARCHAR(20) NOT NULL,
             train BOOL,
             bus BOOL,
-            FOREIGN KEY (fname) REFRENCES people(fname)
-        )
-    """
-
-    # Junction table for people and tickets
-    CREATE_PEOPLE_TICKETS_TABLE = """
-        CREATE TABLE IF NOT EXISTS people_tickets(
-            people_fname VARCHAR(20) NOT NULL,
-            ticketID INT NOT NULL,
-            FOREIGN KEY (people_fname) REFERENCES people(fname),
-            FOREIGN KEY (ticketID) REFERENCES ticket(ticketID),
-            PRIMARY KEY (people_fname, ticketID)
+            FOREIGN KEY (fname) REFERENCES people(fname)
         )
     """
 
@@ -87,15 +75,13 @@ def create_tables():
 
     if db_connection:
         db_cursor = db_connection.cursor()
-
-        db_cursor.execute(CREATE_TICKET_TABLE)
         db_cursor.execute(CREATE_PEOPLE_TABLE)
+        db_cursor.execute(CREATE_TICKET_TABLE)
         db_cursor.execute(CREATE_TRAIN_TABLE)
         db_cursor.execute(CREATE_BUS_TABLE)
         db_cursor.execute(CREATE_TRAIN_SCHEDULE_TABLE)
         db_cursor.execute(CREATE_BUS_SCHEDULE_TABLE)
         db_cursor.execute(CREATE_PREFERENCE_TABLE)
-        db_cursor.execute(CREATE_PEOPLE_TICKETS_TABLE)
 
         db_connection.commit()
 
