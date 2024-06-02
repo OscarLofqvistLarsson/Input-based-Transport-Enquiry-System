@@ -1,6 +1,6 @@
-from connection import *
-from tables import *
-from populate_tables import *
+from connection2 import *
+from tables2 import *
+from populate_tables2 import *
 from datetime import datetime, timedelta
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas

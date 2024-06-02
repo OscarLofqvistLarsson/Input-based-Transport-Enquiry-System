@@ -1,4 +1,4 @@
-from connection import *
+from connection2 import *
 
 
 db_connection = establish_db_connection()
