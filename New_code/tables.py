@@ -8,7 +8,9 @@ def create_tables():
             location VARCHAR(255) NOT NULL,
             destination VARCHAR(255) NOT NULL,
             price INT NOT NULL,
-            ticket_type ENUM('bus', 'train') NOT NULL
+            people_ticket_id INT,
+            FOREIGN KEY (people_ticket_id) REFERENCES people(people_ticket_id),
+
         )
     """
 
@@ -16,7 +18,9 @@ def create_tables():
     CREATE_PEOPLE_TABLE = """
         CREATE TABLE IF NOT EXISTS people(
             fname VARCHAR(20) NOT NULL PRIMARY KEY,
-            funds INT NOT NULL
+            funds INT NOT NULL,
+            people_ticket_id INT,
+            UNIQUE KEY (people_ticket_id)
         )
     """
 
@@ -64,7 +68,7 @@ def create_tables():
             fname VARCHAR(20) NOT NULL,
             train BOOL,
             bus BOOL,
-            UNIQUE KEY (fname)
+            FOREIGN KEY (fname) REFRENCES people(fname)
         )
     """
 
