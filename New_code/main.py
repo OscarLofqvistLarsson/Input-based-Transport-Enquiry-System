@@ -292,6 +292,8 @@ if __name__ == "__main__":
             fname = input("What is your name?\n").strip()
             person_location = input("At what station are you at the moment?\n").strip()
             person_destination = input("Where are you planning on heading today?\n").strip()
+
+            # Skapa en funktion som kollar om där redan finns en preference 
             pref = input("Specify preference for train or bus\n").strip().lower()
 
             db_connection = establish_db_connection()

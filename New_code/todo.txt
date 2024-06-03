@@ -1,3 +1,12 @@
 om man följer valet ticket så är nästa steg att kunna köpa ticket.
 
 om man har valt tåg kommer du få tåg MEN varje gång du gör en ny sökning frågar den dig om de igen men även om du byter så kommer den inte byta, jag har ingen åsikt om hur de ska fungera ta vilket du vill
+
+
+
+# Vad är filen "part.py" till för? Kan jag ta bort den?
+
+# Skapa en funktion som kollar om det redan finns en preferance för den personen
+
+# Vilken Procedure är det vi ska anända (alltså ligga i 'mysql_code.sql' filen), för just nu har jag två st som ligger loggade på 
+databasen
