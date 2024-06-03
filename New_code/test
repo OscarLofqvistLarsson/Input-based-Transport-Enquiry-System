@@ -21,13 +21,7 @@ def populate_tables():
             db_connection.commit()
             print("Tables have been populated successfully")
 
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            db_connection.rollback()
 
-        finally:
-            db_cursor.close()
-            close_db_connection(db_connection)
     else:
         print("Connection to database failed")
 
@@ -36,25 +30,17 @@ def test():
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        try:
-            arg = ('Oscar',)
-            db_cursor.callproc('GetPreferences', arg)
+        arg = ('Oscar',)
+        db_cursor.callproc('GetPreferences', arg)
 
-            for result in db_cursor.stored_results():
-                fetched_result = result.fetchone()
-                print(f"Fetched result: {fetched_result}")
+        for result in db_cursor.stored_results():
+            fetched_result = result.fetchone()
 
             db_cursor.close()
             close_db_connection(db_connection)
 
             return fetched_result
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            db_cursor.close()
-            close_db_connection(db_connection)
-            return None
-    else:
-        return None
+
 
 if __name__ == "__main__":
     populate_tables()
