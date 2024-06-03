@@ -6,7 +6,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS people(
             fname VARCHAR(20) NOT NULL PRIMARY KEY,
             funds INT NOT NULL,
-            people_ticket_id INT NOT NULL,
+            people_ticket_id INT AUTO_INCREMENT NOT NULL,
             UNIQUE KEY (people_ticket_id)
         )
     """

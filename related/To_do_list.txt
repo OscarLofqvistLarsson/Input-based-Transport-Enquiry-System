@@ -1,2 +1,6 @@
 1. Kolla igenom alla tables så de stämmer överens med E/R_Diagrammet
 2. Börja koda på relationen mellan "people" - och "prefrence" tables
+
+
+
+"Vad är Train table och bus table till för?"
