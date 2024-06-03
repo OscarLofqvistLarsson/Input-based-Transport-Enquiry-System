@@ -2,9 +2,6 @@ from connection import *
 from tables import *
 from populate_tables import *
 from datetime import datetime, timedelta
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import os
 
 # List of stations in order
 locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
@@ -159,7 +156,7 @@ def estimated_ticket(fname, person_location, person_destination, funds):
         return "Connection to database failed"
 
 # Function
-def purchase_ticket(location, destination, ticket_price, threshold, funds, fname):
+def purchase_ticket(location, destination, ticket_price, funds, fname):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
@@ -189,11 +186,11 @@ def purchase_ticket(location, destination, ticket_price, threshold, funds, fname
         if ticket_id:
             # Insert a record into the people table
             insert_people_query = """
-            INSERT INTO people (threshold, funds, people_ticketID, fname)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO people (fname, funds, people_ticket_id, )
+            VALUES (%s, %s, %s)
             """
             new_funds = funds - ticket_price
-            db_cursor.execute(insert_people_query, (threshold, new_funds, ticket_id, fname))
+            db_cursor.execute(insert_people_query, (fname,new_funds, ticket_id))
 
             db_connection.commit()
             close_db_connection(db_connection)
@@ -212,11 +209,11 @@ def check_name(name):
         db_cursor = db_connection.cursor()
 
         # Prepare the stored procedure call
-        call_proc_query = "CALL check_name(%s, @threshold, @funds)"
+        call_proc_query = "CALL check_name(%s, @funds)"
         db_cursor.execute(call_proc_query, (name,))
 
         # Fetch the output parameters
-        db_cursor.execute("SELECT @threshold, @funds")
+        db_cursor.execute("SELECT @funds")
         result_name = db_cursor.fetchone()
 
         db_cursor.close()
@@ -270,21 +267,21 @@ if __name__ == "__main__":
 
 
                 funds = name_check[1]
-                result = estimated_ticket(fname, person_location, person_destination, threshold, funds)
+                result = estimated_ticket(fname, person_location, person_destination, funds)
                 print(result)
 
             else:
                 person_location = input("At what station are you at the moment?\n")
                 person_destination = input("Where are you planning on heading today?\n")
-                threshold = input("Specify preference for train or bus by either entering t1-t10 or b1-b10 respectively\n")
+                pref = input("Specify preference for train or bus\n")
                 funds = int(input("How much money do you have for your traveling needs?\n"))
-                result = estimated_ticket(person_location, person_destination, threshold, funds)
+                result = estimated_ticket(person_location, person_destination, funds)
                 print(result)
 
             if "Travel itinerary" in result:
                 buy_choice = input("Would you like to buy you ticket? ")
                 if buy_choice.lower() == "yes":
-                    purchase_ticket(person_location ,person_destination, ticket_price, threshold, funds,name_tell)
+                    purchase_ticket(person_location ,person_destination, ticket_price, funds,name_tell)
 
         if choice == "info":
             name_tell = input("What is your name?\n")
