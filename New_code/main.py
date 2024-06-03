@@ -142,7 +142,6 @@ def estimated_ticket(fname, person_location, person_destination, funds):
 
         total_minutes = total_travel_time.total_seconds() / 60
 
-
         if funds >= ticket_price:
             result = "Travel itinerary:\n"
             for departure_time_str, arrival_time_str, start_station, end_station, total in travel_map:
@@ -262,11 +261,7 @@ if __name__ == "__main__":
                 person_location = input("At what station are you at the moment?\n")
                 person_destination = input("Where are you planning on heading today?\n")
 
-
-
-
-
-                funds = name_check[1]
+                funds = name_check[0]
                 result = estimated_ticket(fname, person_location, person_destination, funds)
                 print(result)
 
