@@ -33,26 +33,42 @@ def check_time_diff(db_cursor, person_location, current_time, person_destination
     if train_departure is None and bus_departure is None:
         return None
 
-def estimated_ticket(fname, person_location, person_destination, funds):
-    global ticket_price
-    ticket_price = 0
-
+def estimated_ticket(fname, person_location, person_destination, funds, pref):
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
+        insert_people_query = """
+            INSERT INTO people(fname, funds )
+            VALUES (%s, %s)
+            """
+        db_cursor.execute(insert_people_query, (fname, funds,))
 
+        if pref == "train":
+            pref1 = True
+            pref2 = False
+        if pref == "bus":
+            pref1 = False
+            pref2 = True
+        else:
+            print("input bus or train on preference")
+
+        insert_pref_query = """
+            INSERT INTO preference(fname, train,bus)
+            VALUES (%s, %s, %s)
+            """
+        db_cursor.execute(insert_pref_query, (fname,pref1,pref2))
+
+        db_connection.commit()
         arg = (f'{fname}',)
         db_cursor.callproc('GetPreferences', arg)
 
         for result in db_cursor.stored_results():
             fetched_result = result.fetchone()
-
-            return fetched_result
+            print(fetched_result)
     else:
         return "Input for preference needs to start with t or b for train or bus"
 
     current_datetime = datetime.now().replace(microsecond=0)
-
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
         query_schedule = """
@@ -188,6 +204,7 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
             INSERT INTO people (fname, funds, people_ticket_id, )
             VALUES (%s, %s, %s)
             """
+            # ändra ovan så den byter funds istället
             new_funds = funds - ticket_price
             db_cursor.execute(insert_people_query, (fname,new_funds, ticket_id))
 
@@ -260,17 +277,21 @@ if __name__ == "__main__":
             if name_check:
                 person_location = input("At what station are you at the moment?\n")
                 person_destination = input("Where are you planning on heading today?\n")
-
-                funds = name_check[0]
-                result = estimated_ticket(fname, person_location, person_destination, funds)
+                pref = input("Specify preference for train or bus\n")
+                pref = pref.lower()
+                funds = int(input("money\n"))
+                result = estimated_ticket(fname, person_location, person_destination, funds, pref)
                 print(result)
 
             else:
                 person_location = input("At what station are you at the moment?\n")
                 person_destination = input("Where are you planning on heading today?\n")
                 pref = input("Specify preference for train or bus\n")
+                pref = pref.lower()
                 funds = int(input("How much money do you have for your traveling needs?\n"))
-                result = estimated_ticket(person_location, person_destination, funds)
+
+
+                result = estimated_ticket(fname, person_location, person_destination, funds, pref)
                 print(result)
 
             if "Travel itinerary" in result:
