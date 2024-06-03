@@ -3,31 +3,26 @@ from tables import *
 from populate_tables import *
 
 
-def test(fname):
+def test():
     db_connection = establish_db_connection()
     if db_connection:
         db_cursor = db_connection.cursor()
 
-        try:
-            arg = ('Oscar')
-            db_cursor.callproc('GetPreferences', arg)
-            
+        arg = ('Oscar',)
+        db_cursor.callproc('GetPreferences', arg)
 
-            db_cursor.close()
-            close_db_connection(db_connection)
+        # Fetch the result from the stored procedure
+        for result in db_cursor.stored_results():
+            fetched_result = result.fetchone()
 
+        db_cursor.close()
+        close_db_connection(db_connection)
 
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            db_cursor.close()
-            close_db_connection(db_connection)
-            return None
-    else:
-        return None
+        return fetched_result
+
 
 if __name__ == "__main__":
-    name = input("Enter name: ")
-    result = test(name)
+    result = test()
     if result:
         print(f"Name: {result[0]}, Train Preference: {result[1]}, Bus Preference: {result[2]}")
     else:
