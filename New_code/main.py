@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
 locations_bus = ["Sölvesborg",  "Mörrum", "Karlshamn", "Bräkne-Hoby", "Ronneby","Listerby","Nättraby", "Karlskrona",  "Lyckeby", "Jämjö", ]
 
-def check_time_diff(db_cursor, person_location, current_time, person_destination):
+def check_time_diff(db_cursor, person_location, current_time, person_destination, transport_type):
     def get_next_departure_time(transport_type, person_location, current_time):
         query = f"""
         SELECT departure_time, end_station
@@ -218,28 +218,6 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         print("Failed to connect to the database.")
 
 
-# Procedure:
-def check_name(name):
-    db_connection = establish_db_connection()
-    if db_connection:
-        db_cursor = db_connection.cursor()
-
-        # Prepare the stored procedure call
-        call_proc_query = "CALL check_name(%s, @funds)"
-        db_cursor.execute(call_proc_query, (name,))
-
-        # Fetch the output parameters
-        db_cursor.execute("SELECT @funds")
-        result_name = db_cursor.fetchone()
-
-        db_cursor.close()
-        close_db_connection(db_connection)
-
-        return result_name
-    else:
-        return None
-
-
 def get_person_info(name):
     db_connection = establish_db_connection()
     if db_connection:
@@ -273,26 +251,16 @@ if __name__ == "__main__":
         choice = input("Would you like to buy a ticket, see the current schedule or see information regarding your info?\n")
         if choice == "ticket":
             fname = input("What is your name?\n")
-            name_check = check_name(fname)
-            if name_check:
-                person_location = input("At what station are you at the moment?\n")
-                person_destination = input("Where are you planning on heading today?\n")
-                pref = input("Specify preference for train or bus\n")
-                pref = pref.lower()
+            person_location = input("At what station are you at the moment?\n")
+            person_destination = input("Where are you planning on heading today?\n")
+            pref = input("Specify preference for train or bus\n")
+            pref = pref.lower()
+            if not in # något
                 funds = int(input("money\n"))
-                result = estimated_ticket(fname, person_location, person_destination, funds, pref)
-                print(result)
-
             else:
-                person_location = input("At what station are you at the moment?\n")
-                person_destination = input("Where are you planning on heading today?\n")
-                pref = input("Specify preference for train or bus\n")
-                pref = pref.lower()
-                funds = int(input("How much money do you have for your traveling needs?\n"))
-
-
-                result = estimated_ticket(fname, person_location, person_destination, funds, pref)
-                print(result)
+                #hämta funds
+            result = estimated_ticket(fname, person_location, person_destination, funds, pref)
+            print(result)
 
             if "Travel itinerary" in result:
                 buy_choice = input("Would you like to buy you ticket? ")
