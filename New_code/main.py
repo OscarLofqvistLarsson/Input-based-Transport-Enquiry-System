@@ -9,19 +9,13 @@ def test(fname):
         db_cursor = db_connection.cursor()
 
         try:
-            # Prepare the stored procedure call with multi=True
-            call_proc_query = "CALL GetPreferences(%s)"
-            db_cursor.execute(call_proc_query, (fname,), multi=True)
-
-            # Fetch the result from the stored procedure
-            for result in db_cursor:
-                if result.with_rows:
-                    output = result.fetchall()
+            arg = ('Oscar')
+            db_cursor.callproc('GetPreferences', arg)
+            
 
             db_cursor.close()
             close_db_connection(db_connection)
 
-            return output
 
         except mysql.connector.Error as err:
             print(f"Error: {err}")
