@@ -27,12 +27,23 @@ def check_time_diff(db_cursor, person_location, current_time, preferences):
             return departure_datetime, end_station
         return None, None
 
-    if preferences.get('train'):
-        train_departure, train_end_station = get_next_departure_time('train', person_location, current_time)
-        return 'train', train_departure
-    if preferences.get('bus'):
-        bus_departure, bus_end_station = get_next_departure_time('bus', person_location, current_time)
-        return 'bus', bus_departure
+    departure, end_station = get_next_departure_time(pref, person_location, current_time)
+
+    def is_correct_direction(start, end, destination, locations):
+        try:
+            start_index = locations.index(start)
+            end_index = locations.index(end)
+            destination_index = locations.index(destination)
+            return (end_index > start_index and destination_index > start_index) or (end_index < start_index and destination_index < start_index)
+        except ValueError:
+            return False
+
+    if pref == "train" and is_correct_direction(person_location, end_station, person_destination, locations_train):
+        return pref, departure
+    if pref == "bus" and is_correct_direction(person_location, end_station, person_destination, locations_bus):
+        return pref, departure
+    else:
+        return None, None
 
 def estimated_ticket(fname, person_location, person_destination, funds, pref):
     db_connection = establish_db_connection()
@@ -205,7 +216,6 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
     else:
         return "Insufficient funds for the ticket."
 
-
 def purchase_ticket(location, destination, ticket_price, funds, fname):
     db_connection = establish_db_connection()
     if not db_connection:
@@ -264,7 +274,6 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         return "Failed to create ticket."
 
 
-
 def get_person_info(name):
     db_connection = establish_db_connection()
     if not db_connection:
@@ -290,7 +299,6 @@ def get_person_info(name):
                 print(f"  From {row[2]} to {row[3]}, price: {row[4]}")
     else:
         print("No information found for this person.")
-
 
 if __name__ == "__main__":
     while True:

@@ -1,4 +1,5 @@
 DELIMITER //
+
 CREATE PROCEDURE GetPreferences(IN person_fname VARCHAR(20))
 BEGIN
     SELECT p.fname, pr.train, pr.bus
@@ -6,8 +7,10 @@ BEGIN
     JOIN preference pr ON p.fname = pr.fname
     WHERE p.fname = person_fname;
 END //
+
 DELIMITER ;
 
+DELIMITER //
 
 CREATE FUNCTION check_or_create_ticket(person_location VARCHAR(255), person_destination VARCHAR(255), ticket_price INT)
 RETURNS INT
