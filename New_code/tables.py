@@ -18,7 +18,7 @@ def create_tables():
             location VARCHAR(255) NOT NULL,
             destination VARCHAR(255) NOT NULL,
             price INT NOT NULL,
-            people_ticket_id INT NOT NULL,
+            people_ticket_id INT,
             FOREIGN KEY (people_ticket_id) REFERENCES people(people_ticket_id)
         )
     """

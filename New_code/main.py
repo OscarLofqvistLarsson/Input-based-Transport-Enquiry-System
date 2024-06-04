@@ -198,9 +198,9 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
     if funds >= ticket_price:
         result = "Travel itinerary:\n"
         for departure_time_str, arrival_time_str, start_station, end_station, total in travel_map:
-            result += f"From {start_station} to {end_station}, departure at {departure_time_str}, arrival at {arrival_time_str}\n"
-        result += f"Total travel time: {total_minutes} minutes\n"
-        result += f"Ticket price: {ticket_price}\n"
+            result += f"From {start_station} to {end_station}, departure at {departure_time_str}, arrival at {arrival_time_str} \n"
+        result += f"Total travel time: {total_minutes} minutes"
+        result += f"Ticket price: {ticket_price}"
         return result, ticket_price
     else:
         return "Insufficient funds for the ticket."
@@ -213,15 +213,12 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
 
     db_cursor = db_connection.cursor()
 
-    # Call funktion.sql
+    # Check if the person already has this ticket
     check_ticket_query = """
-    SELECT people_ticketID FROM people
-    WHERE fname = %s AND people_ticketID IN (
-        SELECT ticketID FROM ticket
-        WHERE location = %s AND destination = %s AND price = %s
-    )
+    SELECT people_ticket_id FROM ticket
+    WHERE location = %s AND destination = %s AND price = %s AND people_ticket_id IS NOT NULL
     """
-    db_cursor.execute(check_ticket_query, (fname, location, destination, ticket_price))
+    db_cursor.execute(check_ticket_query, (location, destination, ticket_price))
     existing_ticket = db_cursor.fetchone()
 
     if existing_ticket:
@@ -229,7 +226,7 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         close_db_connection(db_connection)
         return "You already have this ticket."
 
-    # If the person doesn't have the ticket, proceed with purchase
+    # Check or create the ticket
     check_or_create_ticket_query = """
     SELECT check_or_create_ticket(%s, %s, %s)
     """
@@ -237,14 +234,24 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
     ticket_id = db_cursor.fetchone()[0]
 
     if ticket_id:
-        # Update the person's funds and associate the ticket
-        update_people_query = """
+        # Update the person's funds
+        update_funds_query = """
         UPDATE people
-        SET funds = %s, people_ticketID = %s
+        SET funds = %s
         WHERE fname = %s
         """
         new_funds = funds - ticket_price
-        db_cursor.execute(update_people_query, (new_funds, ticket_id, fname))
+        db_cursor.execute(update_funds_query, (new_funds, fname))
+
+        # Associate the ticket with the person
+        associate_ticket_query = """
+        UPDATE ticket
+        SET people_ticket_id = (
+            SELECT people_ticket_id FROM people WHERE fname = %s
+        )
+        WHERE ticketID = %s
+        """
+        db_cursor.execute(associate_ticket_query, (fname, ticket_id))
 
         db_connection.commit()
         db_cursor.close()
@@ -255,6 +262,7 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         db_cursor.close()
         close_db_connection(db_connection)
         return "Failed to create ticket."
+
 
 
 def get_person_info(name):
@@ -308,21 +316,24 @@ if __name__ == "__main__":
                 check_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
                 db_cursor.execute(check_pref_query, (fname,))
                 result = db_cursor.fetchone()
-                if result == (1, 0):
-                    pref =  "train"
-                if result == (0, 1):
-                    pref =  "bus"
-                if result == (None, None) or result == (0, 0):
-                    pref = input("Specify preference for train or bus\n").strip().lower()
+                if result:
+                    if result == (1, 0):
+                        pref =  "train"
+                    if result == (0, 1):
+                        pref =  "bus"
+                    if result == (None, None) or result == (0, 0):
+                        pref = input("Specify preference for train or bus").lower()
+                else:
+                    pref = input("Specify preference for train or bus").lower()
 
                 db_cursor.close()
                 close_db_connection(db_connection)
 
                 result = estimated_ticket(fname, person_location, person_destination, funds, pref)
-                print(result)
+                print(result[0])
 
-                if "Travel itinerary" in result:
-                    buy_choice = input("Would you like to buy your ticket?").strip().lower()
+                if "Travel itinerary" in result[0]:
+                    buy_choice = input("Would you like to buy your ticket?").lower()
                     if buy_choice == "yes":
                         purchase_result = purchase_ticket(person_location, person_destination, ticket_price, funds, fname)
                         print(purchase_result)
