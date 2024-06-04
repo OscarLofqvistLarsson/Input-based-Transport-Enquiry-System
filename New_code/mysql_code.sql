@@ -8,19 +8,6 @@ BEGIN
 END //
 DELIMITER ;
 
-DELIMITER //
-CREATE FUNCTION CheckPreference(fname VARCHAR(20))
-RETURNS BOOLEAN
-BEGIN
-    DECLARE pref_exists BOOLEAN;
-    SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END INTO pref_exists
-    FROM preference
-    WHERE fname = p_fname;
-    RETURN pref_exists;
-END //
-DELIMITER ;
-
-DELIMITER //
 
 CREATE FUNCTION check_or_create_ticket(person_location VARCHAR(255), person_destination VARCHAR(255), ticket_price INT)
 RETURNS INT
