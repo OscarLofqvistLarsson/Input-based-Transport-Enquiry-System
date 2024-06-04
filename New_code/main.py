@@ -83,25 +83,31 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
         db_cursor.execute(insert_pref_query, (fname, pref1, pref2))
 
         db_connection.commit()
-    else:
-        # Retrieve the user's current funds
-        get_funds_query = "SELECT funds FROM people WHERE fname = %s"
-        db_cursor.execute(get_funds_query, (fname,))
-        funds = db_cursor.fetchone()[0]
 
-        # Retrieve the user's preference
-        get_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
-        db_cursor.execute(get_pref_query, (fname,))
-        pref_result = db_cursor.fetchone()
-        if pref_result:
-            pref1, pref2 = pref_result
-            pref = "train" if pref1 else "bus"
+# Också onödig, vi hämtar redab funds sedan tidigare så vi gör samma jobb 2 ggr om istället
+    # else:
+    #     # Retrieve the user's current funds
+    #     get_funds_query = "SELECT funds FROM people WHERE fname = %s"
+    #     db_cursor.execute(get_funds_query, (fname,))
+    #     funds = db_cursor.fetchone()[0]
 
-    # Retrieve user preferences for the check_time_diff function
-    preferences = {
-        'train': pref1,
-        'bus': pref2
-    }
+# Detta ned är onödigt, vi har redan fått tag i dess prefrence 
+
+
+        # # Retrieve the user's preference
+        # get_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
+        # db_cursor.execute(get_pref_query, (fname,))
+        # pref_result = db_cursor.fetchone()
+        # if pref_result:
+        #     pref1, pref2 = pref_result
+        #     pref = "train" if pref1 else "bus"
+
+# Detta nedan är väl också onödig?
+    # # Retrieve user preferences for the check_time_diff function
+    # preferences = {
+    #     'train': pref1,
+    #     'bus': pref2
+    # }
 
     current_datetime = datetime.now().replace(microsecond=0)
 
@@ -135,7 +141,7 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
     current_station = person_location
     travel_map = []
     visited_stations = set()
-    transport_type, next_departure = check_time_diff(db_cursor, person_location, current_datetime, preferences)
+    transport_type, next_departure = check_time_diff(db_cursor, person_location, current_datetime, pref)
     if not transport_type:
         db_cursor.close()
         close_db_connection(db_connection)
@@ -330,9 +336,9 @@ if __name__ == "__main__":
                     if result == (0, 1):
                         pref =  "bus"
                     if result == (None, None) or result == (0, 0):
-                        pref = input("Specify preference for train or bus").lower()
+                        pref = input("Specify preference for train or bus\n").lower()
                 else:
-                    pref = input("Specify preference for train or bus").lower()
+                    pref = input("Specify preference for train or bus\n").lower()
 
                 db_cursor.close()
                 close_db_connection(db_connection)
