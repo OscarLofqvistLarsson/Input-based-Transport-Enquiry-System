@@ -27,23 +27,12 @@ def check_time_diff(db_cursor, person_location, current_time, preferences):
             return departure_datetime, end_station
         return None, None
 
-    departure, end_station = get_next_departure_time(pref, person_location, current_time)
-
-    def is_correct_direction(start, end, destination, locations):
-        try:
-            start_index = locations.index(start)
-            end_index = locations.index(end)
-            destination_index = locations.index(destination)
-            return (end_index > start_index and destination_index > start_index) or (end_index < start_index and destination_index < start_index)
-        except ValueError:
-            return False
-
-    if pref == "train" and is_correct_direction(person_location, end_station, person_destination, locations_train):
-        return pref, departure
-    if pref == "bus" and is_correct_direction(person_location, end_station, person_destination, locations_bus):
-        return pref, departure
-    else:
-        return None, None
+    if preferences.get('train'):
+        train_departure, train_end_station = get_next_departure_time('train', person_location, current_time)
+        return 'train', train_departure
+    if preferences.get('bus'):
+        bus_departure, bus_end_station = get_next_departure_time('bus', person_location, current_time)
+        return 'bus', bus_departure
 
 def estimated_ticket(fname, person_location, person_destination, funds, pref):
     db_connection = establish_db_connection()
@@ -83,49 +72,50 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
         db_cursor.execute(insert_pref_query, (fname, pref1, pref2))
 
         db_connection.commit()
+    else:
+        # Retrieve the user's current funds
+        get_funds_query = "SELECT funds FROM people WHERE fname = %s"
+        db_cursor.execute(get_funds_query, (fname,))
+        funds = db_cursor.fetchone()[0]
 
-# Också onödig, vi hämtar redab funds sedan tidigare så vi gör samma jobb 2 ggr om istället
-    # else:
-    #     # Retrieve the user's current funds
-    #     get_funds_query = "SELECT funds FROM people WHERE fname = %s"
-    #     db_cursor.execute(get_funds_query, (fname,))
-    #     funds = db_cursor.fetchone()[0]
+        # Retrieve the user's preference
+        get_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
+        db_cursor.execute(get_pref_query, (fname,))
+        pref_result = db_cursor.fetchone()
+        if pref_result:
+            pref1, pref2 = pref_result
+            pref = "train" if pref1 else "bus"
 
-# Detta ned är onödigt, vi har redan fått tag i dess prefrence 
-
-
-        # # Retrieve the user's preference
-        # get_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
-        # db_cursor.execute(get_pref_query, (fname,))
-        # pref_result = db_cursor.fetchone()
-        # if pref_result:
-        #     pref1, pref2 = pref_result
-        #     pref = "train" if pref1 else "bus"
-
-# Detta nedan är väl också onödig?
-    # # Retrieve user preferences for the check_time_diff function
-    # preferences = {
-    #     'train': pref1,
-    #     'bus': pref2
-    # }
+    # Retrieve user preferences for the check_time_diff function
+    preferences = {
+        'train': pref1,
+        'bus': pref2
+    }
 
     current_datetime = datetime.now().replace(microsecond=0)
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
+
+        if locations_train.index(person_location) > locations_train.index(person_destination):
+                direction = -1
+        else:
+                direction = 1
+
         query_schedule = f"""
         SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
         FROM {transport_type}_schedule
         WHERE start_station = %s AND departure_time >= %s
         ORDER BY departure_time
-        LIMIT 1
+        LIMIT 2
         """
 
         db_cursor.execute(query_schedule, (current_station, travel_time))
         for station in db_cursor.fetchall():
-            _, _, _, end_station, _ = station
+            departure_time, arrival_time, start_station, end_station, total = station
+        if (direction == 1 and locations_train.index(end_station) > locations_train.index(current_station)) or \
+            (direction == -1 and locations_train.index(end_station) < locations_train.index(current_station)):
             if end_station not in visited_stations:
                 return station
-        return None
 
     # Check for misspell
     if person_location not in locations_train and person_location not in locations_bus:
@@ -141,7 +131,7 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
     current_station = person_location
     travel_map = []
     visited_stations = set()
-    transport_type, next_departure = check_time_diff(db_cursor, person_location, current_datetime, pref)
+    transport_type, next_departure = check_time_diff(db_cursor, person_location, current_datetime, preferences)
     if not transport_type:
         db_cursor.close()
         close_db_connection(db_connection)
@@ -201,7 +191,7 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
                 close_db_connection(db_connection)
                 return "No direct route towards the destination found."
         ticket_price += 50
-        transport_type, next_departure = check_time_diff(db_cursor, current_station, current_datetime, pref)
+        transport_type, next_departure = check_time_diff(db_cursor, current_station, current_datetime, preferences)
         if not transport_type:
             db_cursor.close()
             close_db_connection(db_connection)
@@ -221,6 +211,7 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
         return result, ticket_price
     else:
         return "Insufficient funds for the ticket."
+
 
 def purchase_ticket(location, destination, ticket_price, funds, fname):
     db_connection = establish_db_connection()
@@ -280,6 +271,7 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         return "Failed to create ticket."
 
 
+
 def get_person_info(name):
     db_connection = establish_db_connection()
     if not db_connection:
@@ -305,6 +297,7 @@ def get_person_info(name):
                 print(f"  From {row[2]} to {row[3]}, price: {row[4]}")
     else:
         print("No information found for this person.")
+
 
 if __name__ == "__main__":
     while True:
@@ -336,9 +329,9 @@ if __name__ == "__main__":
                     if result == (0, 1):
                         pref =  "bus"
                     if result == (None, None) or result == (0, 0):
-                        pref = input("Specify preference for train or bus\n").lower()
+                        pref = input("Specify preference for train or bus").lower()
                 else:
-                    pref = input("Specify preference for train or bus\n").lower()
+                    pref = input("Specify preference for train or bus").lower()
 
                 db_cursor.close()
                 close_db_connection(db_connection)
