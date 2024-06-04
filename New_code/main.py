@@ -293,10 +293,6 @@ if __name__ == "__main__":
             person_location = input("At what station are you at the moment?\n").strip()
             person_destination = input("Where are you planning on heading today?\n").strip()
 
-            
-            # Skapa en funktion som kollar om där redan finns en preference 
-            pref = input("Specify preference for train or bus\n").strip().lower()
-
             db_connection = establish_db_connection()
             if db_connection:
                 db_cursor = db_connection.cursor()
@@ -308,6 +304,16 @@ if __name__ == "__main__":
                     funds = result[0]
                 else:
                     funds = int(input("How much money do you have?\n"))
+
+                check_pref_query = "SELECT train, bus FROM preference WHERE fname = %s"
+                db_cursor.execute(check_pref_query, (fname,))
+                result = db_cursor.fetchone()
+                if result == (1, 0):
+                    pref =  "train"
+                if result == (0, 1):
+                    pref =  "bus"
+                if result == (None, None) or result == (0, 0):
+                    pref = input("Specify preference for train or bus\n").strip().lower()
 
                 db_cursor.close()
                 close_db_connection(db_connection)
