@@ -201,7 +201,7 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
                 close_db_connection(db_connection)
                 return "No direct route towards the destination found."
         ticket_price += 50
-        transport_type, next_departure = check_time_diff(db_cursor, current_station, current_datetime, preferences)
+        transport_type, next_departure = check_time_diff(db_cursor, current_station, current_datetime, pref)
         if not transport_type:
             db_cursor.close()
             close_db_connection(db_connection)
