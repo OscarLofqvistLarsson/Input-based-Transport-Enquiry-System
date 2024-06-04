@@ -95,11 +95,15 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
     current_datetime = datetime.now().replace(microsecond=0)
 
     def find_next_station(db_cursor, transport_type, current_station, travel_time, visited_stations):
-
-        if locations_train.index(person_location) > locations_train.index(person_destination):
-                direction = -1
+        if transport_type == 'train':
+            locations = locations_train
         else:
-                direction = 1
+            locations = locations_bus
+
+        if locations.index(person_location) > locations.index(person_destination):
+            direction = -1
+        else:
+            direction = 1
 
         query_schedule = f"""
         SELECT CAST(departure_time AS CHAR) AS departure_time, CAST(arrival_time AS CHAR) AS arrival_time, start_station, end_station, total
@@ -112,10 +116,12 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
         db_cursor.execute(query_schedule, (current_station, travel_time))
         for station in db_cursor.fetchall():
             departure_time, arrival_time, start_station, end_station, total = station
-        if (direction == 1 and locations_train.index(end_station) > locations_train.index(current_station)) or \
-            (direction == -1 and locations_train.index(end_station) < locations_train.index(current_station)):
-            if end_station not in visited_stations:
-                return station
+            if (direction == 1 and locations.index(end_station) > locations.index(current_station)) or \
+                (direction == -1 and locations.index(end_station) < locations.index(current_station)):
+                if end_station not in visited_stations:
+                    return station
+
+        return None
 
     # Check for misspell
     if person_location not in locations_train and person_location not in locations_bus:
@@ -269,8 +275,6 @@ def purchase_ticket(location, destination, ticket_price, funds, fname):
         db_cursor.close()
         close_db_connection(db_connection)
         return "Failed to create ticket."
-
-
 
 def get_person_info(name):
     db_connection = establish_db_connection()
