@@ -356,18 +356,18 @@ if __name__ == "__main__":
             get_person_info(name_tell)
 
         if choice == "schedule":
+            pdf_train = "train_schedule.pdf"
+            pdf_bus = "bus_schedule.pdf"
             try:
-                os.remove("train_schedule.pdf")
-                os.remove("bus_schedule.pdf")
-
+                if os.name == 'nt':  # For Windows
+                    if os.path.exists(pdf_train):
+                        os.remove("train_schedule.pdf")
+                    if os.path.exists(pdf_bus):
+                        os.remove("bus_schedule.pdf")
                 schedule_pdf()
-                pdf_train = "train_schedule.pdf"
-                pdf_bus = "bus_schedule.pdf"
-
                 if os.name == 'nt':  # For Windows
                     if os.path.exists(pdf_train):
                         os.system(f'start {pdf_train}')
-                        break
                     if os.path.exists(pdf_bus):
                         os.system(f'start {pdf_bus}')
             except:
