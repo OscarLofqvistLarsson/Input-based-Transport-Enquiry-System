@@ -344,7 +344,7 @@ if __name__ == "__main__":
                 print(result[0])
 
                 if "Travel itinerary" in result[0]:
-                    buy_choice = input("Would you like to buy your ticket?").lower()
+                    buy_choice = input("Would you like to buy your ticket?\n").lower()
                     if buy_choice == "yes":
                         purchase_result = purchase_ticket(person_location, person_destination, ticket_price, funds, fname)
                         print(purchase_result)
@@ -374,5 +374,3 @@ if __name__ == "__main__":
         elif choice == "exit":
             print("Exiting program...")
             break
-        else:
-            print("Invalid choice, please try again.")
