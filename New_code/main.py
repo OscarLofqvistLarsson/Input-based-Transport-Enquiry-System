@@ -114,14 +114,15 @@ def estimated_ticket(fname, person_location, person_destination, funds, pref):
         """
 
         db_cursor.execute(query_schedule, (current_station, travel_time))
-        for station in db_cursor.fetchall():
-            departure_time, arrival_time, start_station, end_station, total = station
+        result = db_cursor.fetchall()
+        print(result)
+        for station in result:
+            print(station)
+            _, _, _, end_station, _ = station
             if (direction == 1 and locations.index(end_station) > locations.index(current_station)) or \
                 (direction == -1 and locations.index(end_station) < locations.index(current_station)):
                 if end_station not in visited_stations:
                     return station
-
-        return None
 
     # Check for misspell
     if person_location not in locations_train and person_location not in locations_bus:
