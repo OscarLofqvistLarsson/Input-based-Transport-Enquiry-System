@@ -8,6 +8,6 @@ SELECT
 FROM 
     people p1
 JOIN 
-    ticket t ON p1.people_ticketID = t.ticketID
+    ticket t ON p1.people_ticket_id = t.ticketID
 JOIN 
     (SELECT fname, min(funds) AS latest_funds FROM people GROUP BY fname) p2 ON p1.fname = p2.fname;
