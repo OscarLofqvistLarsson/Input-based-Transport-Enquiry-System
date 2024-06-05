@@ -2,6 +2,7 @@ from connection import *
 from tables import *
 from populate_tables import *
 from datetime import datetime, timedelta
+from pdf_create import *
 
 # List of stations in order
 locations_train = ["Sölvesborg", "Karlshamn", "Bräkne-Hoby", "Ronneby", "Bergåsa", "Karlskrona"]
@@ -354,6 +355,24 @@ if __name__ == "__main__":
             name_tell = input("What is your name?\n").strip()
             get_person_info(name_tell)
 
+        if choice == "schedule":
+            try:
+                os.remove("train_schedule.pdf")
+                os.remove("bus_schedule.pdf")
+
+                schedule_pdf()
+                pdf_train = "train_schedule.pdf"
+                pdf_bus = "bus_schedule.pdf"
+
+                if os.name == 'nt':  # For Windows
+                    if os.path.exists(pdf_train):
+                        os.system(f'start {pdf_train}')
+                        break
+                    if os.path.exists(pdf_bus):
+                        os.system(f'start {pdf_bus}')
+            except:
+                FileNotFoundError
+       
         elif choice == "exit":
             print("Exiting program...")
             break
